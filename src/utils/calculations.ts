@@ -1,5 +1,5 @@
 import type { ScenarioInput, QuoteResult } from '../types';
-import { LOAN_PROGRAMS } from '../types';
+import { LOAN_PROGRAMS, isConventionalProgram } from '../types';
 
 function num(v: number | ''): number {
   return v === '' ? 0 : v;
@@ -19,6 +19,7 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
   const program = getLoanProgramInfo(s.loanProgram);
   const isIO = program.type === 'IO';
   const isPurchase = s.transactionType === 'Purchase';
+  const isConv = isConventionalProgram(s.loanProgram);
   const rate = num(s.interestRate);
 
   // Price/Value
@@ -32,22 +33,25 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
       : num(s.currentLoanPayoff);
 
   // Base Loan Amount
-  const baseLoanAmount = priceOrValue === 0
-    ? 0
-    : isPurchase
-      ? priceOrValue - downPaymentOrPayoff
-      : num(s.currentPropertyValue) * num(s.ltvPct);
+  let baseLoanAmount = 0;
+  if (priceOrValue > 0) {
+    if (isPurchase) {
+      baseLoanAmount = priceOrValue - downPaymentOrPayoff;
+    } else {
+      baseLoanAmount = num(s.currentPropertyValue) * num(s.ltvPct);
+    }
+  }
 
   // LTV
   const ltv = priceOrValue === 0 ? 0 : baseLoanAmount / priceOrValue;
 
-  // Loan w/ UFMIP
-  const loanWithUfmip = baseLoanAmount * 1.0175;
+  // Loan w/ UFMIP (only for Conventional)
+  const loanWithUfmip = isConv ? baseLoanAmount * 1.0175 : 0;
 
-  // Payment Type
+  // Payment Type — auto-determined from loan program
   const paymentType = s.loanProgram === '' ? '' : isIO ? 'Interest Only' : 'Principal and Interest';
 
-  // P&I or IO Payment
+  // Auto-calculate P&I based on loan amount, rate, and program term
   let principalAndInterest = 0;
   if (baseLoanAmount > 0 && rate > 0) {
     if (isIO) {
@@ -60,7 +64,8 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
   // Monthly breakdowns
   const insuranceMonthly = num(s.insuranceAnnual) / 12;
   const taxesMonthly = priceOrValue * num(s.propertyTaxRate) / 12;
-  const mortgageInsuranceMonthly = num(s.miRate) * baseLoanAmount / 12;
+  // MI only applies to Conventional
+  const mortgageInsuranceMonthly = isConv ? num(s.miRate) * baseLoanAmount / 12 : 0;
   const hoaMonthly = num(s.hoaDuesMonthly);
 
   const totalMonthlyPayment = principalAndInterest + insuranceMonthly + taxesMonthly + mortgageInsuranceMonthly + hoaMonthly;
@@ -83,22 +88,14 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
   const tqlProcessingFee = s.tqlComplianceFee;
   const tqlLowerRateDiscount = baseLoanAmount * num(s.tqlLowerRateOption);
 
-  // 3rd Party Certifications: Conv/FHA/VA → $350, else $695
   const isConvFhaVa = s.loanProgram.startsWith('Conv') || s.loanProgram.startsWith('FHA') || s.loanProgram.startsWith('VA');
   const thirdPartyCertifications = s.loanProgram === '' ? 0 : isConvFhaVa ? 350 : 695;
 
   const titleFees = num(s.escrowTitleFee);
-
-  // Pre-Paids = annual_insurance + (taxes_monthly * 4) + (loan * rate / 365 * 5)
   const prepaids = num(s.insuranceAnnual) + (taxesMonthly * 4) + (baseLoanAmount * rate / 365 * 5);
-
-  // Escrow at Closing = (insurance_monthly * 3) + (taxes_monthly * 4)
   const escrowAtClosing = (insuranceMonthly * 3) + (taxesMonthly * 4);
-
-  // Seller Credit
   const sellerCredit = priceOrValue === 0 ? 0 : priceOrValue * num(s.sellerCreditPct) * -1;
 
-  // Cash to Close
   let estimatedCashToClose = 0;
   if (priceOrValue > 0) {
     if (isPurchase) {
@@ -108,10 +105,7 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
     }
   }
 
-  // PITIA Reserves
   const pitiaReserves = totalMonthlyPayment * num(s.pitiaReserveMonths);
-
-  // Discount Points
   const discountPointsFee = num(s.discountPoints) * baseLoanAmount;
 
   return {
@@ -122,6 +116,7 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
     occupancy: s.occupancy,
     downPaymentOrLtv,
     transactionType: s.transactionType,
+    isConventional: isConv,
     priceOrValue,
     downPaymentOrPayoff,
     baseLoanAmount,

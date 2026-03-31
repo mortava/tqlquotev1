@@ -2,7 +2,7 @@ import type { QuoteResult, PreparedFor } from '../../types';
 import { displayOrBlank, displayRate } from '../../utils/displayOrBlank';
 
 interface Props {
-  results: [QuoteResult, QuoteResult, QuoteResult];
+  results: QuoteResult[];
   preparedFor: PreparedFor;
 }
 
@@ -17,7 +17,9 @@ function StarVal({ v, fmt = 'currency', negative }: { v: number | string; fmt?: 
 }
 
 export default function QuoteBuilderPage({ results, preparedFor }: Props) {
-  const cols = [0, 1, 2] as const;
+  const count = results.length;
+  const colTemplate = `220px ${Array(count).fill('1fr').join(' ')}`;
+  const anyConventional = results.some(r => r.isConventional);
 
   return (
     <div className="space-y-6">
@@ -38,70 +40,74 @@ export default function QuoteBuilderPage({ results, preparedFor }: Props) {
       {/* Results Table */}
       <div className="bg-white border border-monarch-border rounded-lg overflow-hidden">
         {/* Column Headers */}
-        <div className="grid grid-cols-[220px_1fr_1fr_1fr] bg-monarch-navy text-white">
+        <div className="bg-monarch-navy text-white" style={{ display: 'grid', gridTemplateColumns: colTemplate }}>
           <div className="px-4 py-2"></div>
-          {cols.map(i => (
+          {results.map((_, i) => (
             <div key={i} className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-center">Scenario {i + 1}</div>
           ))}
         </div>
 
         {/* Scenario Details */}
-        <Section label="SCENARIO DETAILS" />
-        <Row label="Property Address">{cols.map(i => <Val key={i} v={results[i].propertyAddress} fmt="text" />)}</Row>
-        <Row label="Loan Program">{cols.map(i => <Val key={i} v={results[i].loanProgram} fmt="text" />)}</Row>
-        <Row label="Credit Score">{cols.map(i => <Val key={i} v={results[i].creditScore} fmt="text" />)}</Row>
-        <Row label="Property Type">{cols.map(i => <Val key={i} v={results[i].propertyType} fmt="text" />)}</Row>
-        <Row label="Occupancy">{cols.map(i => <Val key={i} v={results[i].occupancy} fmt="text" />)}</Row>
-        <Row label="Down Payment / LTV">{cols.map(i => <Val key={i} v={results[i].downPaymentOrLtv} fmt="text" />)}</Row>
-        <Row label="Transaction Type">{cols.map(i => <Val key={i} v={results[i].transactionType} fmt="text" />)}</Row>
+        <Section label="SCENARIO DETAILS" count={count} />
+        <Row label="Property Address" count={count}>{results.map((r, i) => <Val key={i} v={r.propertyAddress} fmt="text" />)}</Row>
+        <Row label="Loan Program" count={count}>{results.map((r, i) => <Val key={i} v={r.loanProgram} fmt="text" />)}</Row>
+        <Row label="Credit Score" count={count}>{results.map((r, i) => <Val key={i} v={r.creditScore} fmt="text" />)}</Row>
+        <Row label="Property Type" count={count}>{results.map((r, i) => <Val key={i} v={r.propertyType} fmt="text" />)}</Row>
+        <Row label="Occupancy" count={count}>{results.map((r, i) => <Val key={i} v={r.occupancy} fmt="text" />)}</Row>
+        <Row label="Down Payment / LTV" count={count}>{results.map((r, i) => <Val key={i} v={r.downPaymentOrLtv} fmt="text" />)}</Row>
+        <Row label="Transaction Type" count={count}>{results.map((r, i) => <Val key={i} v={r.transactionType} fmt="text" />)}</Row>
 
         {/* Loan Details */}
-        <Section label="LOAN DETAILS" />
-        <Row label="Purchase Price / Current Value">{cols.map(i => <Val key={i} v={results[i].priceOrValue} />)}</Row>
-        <Row label="Down Payment / Payoff">{cols.map(i => <Val key={i} v={results[i].downPaymentOrPayoff} />)}</Row>
-        <Row label="Base Loan Amount">{cols.map(i => <Val key={i} v={results[i].baseLoanAmount} />)}</Row>
-        <Row label="Loan-to-Value (LTV)">{cols.map(i => <Val key={i} v={results[i].ltv} fmt="percent" />)}</Row>
-        <Row label="Loan w/ UFMIP">{cols.map(i => <Val key={i} v={results[i].loanWithUfmip} />)}</Row>
+        <Section label="LOAN DETAILS" count={count} />
+        <Row label="Purchase Price / Current Value" count={count}>{results.map((r, i) => <Val key={i} v={r.priceOrValue} />)}</Row>
+        <Row label="Down Payment / Payoff" count={count}>{results.map((r, i) => <Val key={i} v={r.downPaymentOrPayoff} />)}</Row>
+        <Row label="Base Loan Amount" count={count}>{results.map((r, i) => <Val key={i} v={r.baseLoanAmount} />)}</Row>
+        <Row label="Loan-to-Value (LTV)" count={count}>{results.map((r, i) => <Val key={i} v={r.ltv} fmt="percent" />)}</Row>
+        {anyConventional && (
+          <Row label="Loan w/ UFMIP" count={count}>{results.map((r, i) => <Val key={i} v={r.isConventional ? r.loanWithUfmip : 0} />)}</Row>
+        )}
 
         {/* Payment Breakdown */}
-        <Section label="PAYMENT BREAKDOWN" />
-        <Row label="Best Rate">{cols.map(i => <span key={i} className="text-sm">{displayRate(results[i].bestRate)}</span>)}</Row>
-        <Row label="Payment Type">{cols.map(i => <Val key={i} v={results[i].paymentType} fmt="text" />)}</Row>
-        <Row label="Principal & Interest / IO">{cols.map(i => <Val key={i} v={results[i].principalAndInterest} />)}</Row>
-        <Row label="Insurance (Monthly)">{cols.map(i => <Val key={i} v={results[i].insuranceMonthly} />)}</Row>
-        <Row label="Taxes (Monthly)">{cols.map(i => <Val key={i} v={results[i].taxesMonthly} />)}</Row>
-        <Row label="Mortgage Insurance (Monthly)">{cols.map(i => <Val key={i} v={results[i].mortgageInsuranceMonthly} />)}</Row>
-        <Row label="HOA (Monthly)">{cols.map(i => <Val key={i} v={results[i].hoaMonthly} />)}</Row>
-        <HighlightRow label="TOTAL Monthly Payment">{cols.map(i => <StarVal key={i} v={results[i].totalMonthlyPayment} />)}</HighlightRow>
-        <Row label="Gross Annual Revenue">{cols.map(i => <Val key={i} v={results[i].grossAnnualRevenue} />)}</Row>
+        <Section label="PAYMENT BREAKDOWN" count={count} />
+        <Row label="Best Rate" count={count}>{results.map((r, i) => <span key={i} className="text-sm">{displayRate(r.bestRate)}</span>)}</Row>
+        <Row label="Payment Type" count={count}>{results.map((r, i) => <Val key={i} v={r.paymentType} fmt="text" />)}</Row>
+        <Row label="Principal & Interest / IO" count={count}>{results.map((r, i) => <Val key={i} v={r.principalAndInterest} />)}</Row>
+        <Row label="Insurance (Monthly)" count={count}>{results.map((r, i) => <Val key={i} v={r.insuranceMonthly} />)}</Row>
+        <Row label="Taxes (Monthly)" count={count}>{results.map((r, i) => <Val key={i} v={r.taxesMonthly} />)}</Row>
+        {anyConventional && (
+          <Row label="Mortgage Insurance (Monthly)" count={count}>{results.map((r, i) => <Val key={i} v={r.isConventional ? r.mortgageInsuranceMonthly : 0} />)}</Row>
+        )}
+        <Row label="HOA (Monthly)" count={count}>{results.map((r, i) => <Val key={i} v={r.hoaMonthly} />)}</Row>
+        <HighlightRow label="TOTAL Monthly Payment" count={count}>{results.map((r, i) => <StarVal key={i} v={r.totalMonthlyPayment} />)}</HighlightRow>
+        <Row label="Gross Annual Revenue" count={count}>{results.map((r, i) => <Val key={i} v={r.grossAnnualRevenue} />)}</Row>
 
         {/* Investment Analysis */}
-        <Section label="INVESTMENT ANALYSIS" />
-        <Row label="Monthly Rents">{cols.map(i => <Val key={i} v={results[i].monthlyRents} />)}</Row>
-        <HighlightRow label="DSCR Ratio">{cols.map(i => <StarVal key={i} v={results[i].dscrRatio} fmt="ratio" />)}</HighlightRow>
-        <HighlightRow label="Monthly Net Cash Flow">{cols.map(i => <StarVal key={i} v={results[i].monthlyNetCashFlow} negative />)}</HighlightRow>
-        <Row label="Pre-Payment Penalty">{cols.map(i => <Val key={i} v={results[i].prePaymentPenalty} fmt="text" />)}</Row>
+        <Section label="INVESTMENT ANALYSIS" count={count} />
+        <Row label="Monthly Rents" count={count}>{results.map((r, i) => <Val key={i} v={r.monthlyRents} />)}</Row>
+        <HighlightRow label="DSCR Ratio" count={count}>{results.map((r, i) => <StarVal key={i} v={r.dscrRatio} fmt="ratio" />)}</HighlightRow>
+        <HighlightRow label="Monthly Net Cash Flow" count={count}>{results.map((r, i) => <StarVal key={i} v={r.monthlyNetCashFlow} negative />)}</HighlightRow>
+        <Row label="Pre-Payment Penalty" count={count}>{results.map((r, i) => <Val key={i} v={r.prePaymentPenalty} fmt="text" />)}</Row>
 
         {/* Closing Cost Breakdown */}
-        <Section label="CLOSING COST BREAKDOWN" />
-        <Row label="Partner for Life Eligible?">{cols.map(i => <Val key={i} v={results[i].partnerForLife} fmt="text" />)}</Row>
-        <Row label="TQL Flat Fee (Origination)">{cols.map(i => <Val key={i} v={results[i].tqlFlatFee} />)}</Row>
-        <Row label="TQL Processing / UW Fee">{cols.map(i => <Val key={i} v={results[i].tqlProcessingFee} />)}</Row>
-        <Row label="TQL Lower Rate Discount">{cols.map(i => <Val key={i} v={results[i].tqlLowerRateDiscount} />)}</Row>
-        <Row label="3rd Party Closing Costs">{cols.map(i => <Val key={i} v={results[i].thirdPartyClosingCosts} />)}</Row>
-        <Row label="3rd Party Certifications">{cols.map(i => <Val key={i} v={results[i].thirdPartyCertifications} />)}</Row>
-        <Row label="Title Fees">{cols.map(i => <Val key={i} v={results[i].titleFees} />)}</Row>
-        <Row label="Pre-Paids (Int, Tax, Ins)">{cols.map(i => <Val key={i} v={results[i].prepaids} />)}</Row>
-        <Row label="Escrow Payment at Closing">{cols.map(i => <Val key={i} v={results[i].escrowAtClosing} />)}</Row>
-        <Row label="Seller Credit">{cols.map(i => <Val key={i} v={results[i].sellerCredit} />)}</Row>
-        <HighlightRow label="Estimated Cash to Close">{cols.map(i => <StarVal key={i} v={results[i].estimatedCashToClose} />)}</HighlightRow>
-        <HighlightRow label="PITIA Reserves Required">{cols.map(i => <StarVal key={i} v={results[i].pitiaReserves} />)}</HighlightRow>
-        <Row label="Discount Points Fee">{cols.map(i => <Val key={i} v={results[i].discountPointsFee} />)}</Row>
+        <Section label="CLOSING COST BREAKDOWN" count={count} />
+        <Row label="Partner for Life Eligible?" count={count}>{results.map((r, i) => <Val key={i} v={r.partnerForLife} fmt="text" />)}</Row>
+        <Row label="TQL Flat Fee (Origination)" count={count}>{results.map((r, i) => <Val key={i} v={r.tqlFlatFee} />)}</Row>
+        <Row label="TQL Processing / UW Fee" count={count}>{results.map((r, i) => <Val key={i} v={r.tqlProcessingFee} />)}</Row>
+        <Row label="TQL Lower Rate Discount" count={count}>{results.map((r, i) => <Val key={i} v={r.tqlLowerRateDiscount} />)}</Row>
+        <Row label="3rd Party Closing Costs" count={count}>{results.map((r, i) => <Val key={i} v={r.thirdPartyClosingCosts} />)}</Row>
+        <Row label="3rd Party Certifications" count={count}>{results.map((r, i) => <Val key={i} v={r.thirdPartyCertifications} />)}</Row>
+        <Row label="Title Fees" count={count}>{results.map((r, i) => <Val key={i} v={r.titleFees} />)}</Row>
+        <Row label="Pre-Paids (Int, Tax, Ins)" count={count}>{results.map((r, i) => <Val key={i} v={r.prepaids} />)}</Row>
+        <Row label="Escrow Payment at Closing" count={count}>{results.map((r, i) => <Val key={i} v={r.escrowAtClosing} />)}</Row>
+        <Row label="Seller Credit" count={count}>{results.map((r, i) => <Val key={i} v={r.sellerCredit} />)}</Row>
+        <HighlightRow label="Estimated Cash to Close" count={count}>{results.map((r, i) => <StarVal key={i} v={r.estimatedCashToClose} />)}</HighlightRow>
+        <HighlightRow label="PITIA Reserves Required" count={count}>{results.map((r, i) => <StarVal key={i} v={r.pitiaReserves} />)}</HighlightRow>
+        <Row label="Discount Points Fee" count={count}>{results.map((r, i) => <Val key={i} v={r.discountPointsFee} />)}</Row>
 
         {/* Fees Paid Before Closing */}
-        <Section label="FEES PAID BEFORE CLOSING" />
-        <Row label="Appraisal (3rd Party)">{cols.map(i => <span key={i} className="text-sm text-monarch-muted">~$600-900</span>)}</Row>
-        <Row label="Application & Credit Report Fee">{cols.map(i => <span key={i} className="text-sm text-green-600 font-medium">$0 (Waived)</span>)}</Row>
+        <Section label="FEES PAID BEFORE CLOSING" count={count} />
+        <Row label="Appraisal (3rd Party)" count={count}>{results.map((_, i) => <span key={i} className="text-sm text-monarch-muted">~$600-900</span>)}</Row>
+        <Row label="Application & Credit Report Fee" count={count}>{results.map((_, i) => <span key={i} className="text-sm text-green-600 font-medium">$0 (Waived)</span>)}</Row>
       </div>
 
       {/* Disclaimer */}
@@ -117,19 +123,21 @@ export default function QuoteBuilderPage({ results, preparedFor }: Props) {
   );
 }
 
-function Section({ label }: { label: string }) {
+function Section({ label, count }: { label: string; count: number }) {
+  const colTemplate = `220px ${Array(count).fill('1fr').join(' ')}`;
   return (
-    <div className="grid grid-cols-[220px_1fr_1fr_1fr] bg-monarch-section border-t border-monarch-border">
-      <div className="px-4 py-2 col-span-4">
+    <div className="bg-monarch-section border-t border-monarch-border" style={{ display: 'grid', gridTemplateColumns: colTemplate }}>
+      <div className="px-4 py-2" style={{ gridColumn: `1 / ${count + 2}` }}>
         <span className="text-xs font-bold text-monarch-navy uppercase tracking-wider">{label}</span>
       </div>
     </div>
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, count, children }: { label: string; count: number; children: React.ReactNode }) {
+  const colTemplate = `220px ${Array(count).fill('1fr').join(' ')}`;
   return (
-    <div className="grid grid-cols-[220px_1fr_1fr_1fr] border-t border-monarch-border/50">
+    <div className="border-t border-monarch-border/50" style={{ display: 'grid', gridTemplateColumns: colTemplate }}>
       <div className="px-4 py-2 text-xs font-medium text-monarch-navy flex items-center">{label}</div>
       {Array.isArray(children) ? children.map((child, i) => (
         <div key={i} className="px-3 py-2 text-center">{child}</div>
@@ -138,9 +146,10 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function HighlightRow({ label, children }: { label: string; children: React.ReactNode }) {
+function HighlightRow({ label, count, children }: { label: string; count: number; children: React.ReactNode }) {
+  const colTemplate = `220px ${Array(count).fill('1fr').join(' ')}`;
   return (
-    <div className="grid grid-cols-[220px_1fr_1fr_1fr] border-t border-monarch-gold/30 bg-monarch-gold/5">
+    <div className="border-t border-monarch-gold/30 bg-monarch-gold/5" style={{ display: 'grid', gridTemplateColumns: colTemplate }}>
       <div className="px-4 py-2 text-xs font-bold text-monarch-navy flex items-center">
         <span className="text-monarch-gold mr-1">&#9733;</span> {label}
       </div>

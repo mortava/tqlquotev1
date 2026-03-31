@@ -14,7 +14,7 @@ function App() {
     outputLayout: 'screen',
     emailScenarioIndex: 0,
     preparedFor: { name: '', email: '', phone: '' },
-    scenarios: [emptyScenario(), emptyScenario(), emptyScenario()],
+    scenarios: [emptyScenario()],
   });
 
   const printRef = useRef<HTMLDivElement>(null);
@@ -22,7 +22,7 @@ function App() {
 
   const handleScenarioChange = useCallback((idx: number, field: keyof ScenarioInput, value: unknown) => {
     setState(prev => {
-      const scenarios = [...prev.scenarios] as [ScenarioInput, ScenarioInput, ScenarioInput];
+      const scenarios = [...prev.scenarios];
       scenarios[idx] = { ...scenarios[idx], [field]: value };
       return { ...prev, scenarios };
     });
@@ -35,11 +35,26 @@ function App() {
     }));
   }, []);
 
-  const results: [QuoteResult, QuoteResult, QuoteResult] = [
-    calculateQuote(state.scenarios[0]),
-    calculateQuote(state.scenarios[1]),
-    calculateQuote(state.scenarios[2]),
-  ];
+  const handleAddScenario = useCallback(() => {
+    setState(prev => {
+      if (prev.scenarios.length >= 3) return prev;
+      return { ...prev, scenarios: [...prev.scenarios, emptyScenario()] };
+    });
+  }, []);
+
+  const handleRemoveScenario = useCallback((idx: number) => {
+    setState(prev => {
+      if (prev.scenarios.length <= 1) return prev;
+      const scenarios = prev.scenarios.filter((_, i) => i !== idx);
+      return {
+        ...prev,
+        scenarios,
+        emailScenarioIndex: Math.min(prev.emailScenarioIndex, scenarios.length - 1),
+      };
+    });
+  }, []);
+
+  const results: QuoteResult[] = state.scenarios.map(s => calculateQuote(s));
 
   const setView = (v: ActiveView) => setState(prev => ({ ...prev, activeView: v }));
   const setLayout = (v: OutputLayout) => setState(prev => ({ ...prev, outputLayout: v }));
@@ -55,7 +70,6 @@ function App() {
               <span className="text-white/80 text-sm font-light">Quote Builder</span>
             </div>
             <div className="flex items-center gap-1">
-              {/* Page Tabs */}
               <button
                 onClick={() => setView('inputs')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
@@ -80,7 +94,6 @@ function App() {
               {state.activeView === 'quote' && (
                 <>
                   <div className="w-px h-6 bg-white/20 mx-2" />
-                  {/* Layout Switcher */}
                   <button
                     onClick={() => setLayout('screen')}
                     className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
@@ -121,9 +134,9 @@ function App() {
                       onChange={e => setState(prev => ({ ...prev, emailScenarioIndex: parseInt(e.target.value) }))}
                       className="ml-2 px-2 py-1.5 text-xs bg-white/10 text-white border border-white/20 rounded"
                     >
-                      <option value={0} className="text-black">Scenario 1</option>
-                      <option value={1} className="text-black">Scenario 2</option>
-                      <option value={2} className="text-black">Scenario 3</option>
+                      {state.scenarios.map((_, i) => (
+                        <option key={i} value={i} className="text-black">Scenario {i + 1}</option>
+                      ))}
                     </select>
                   )}
                 </>
@@ -141,6 +154,8 @@ function App() {
             preparedFor={state.preparedFor}
             onScenarioChange={handleScenarioChange}
             onPreparedForChange={handlePreparedForChange}
+            onAddScenario={handleAddScenario}
+            onRemoveScenario={handleRemoveScenario}
           />
         )}
 

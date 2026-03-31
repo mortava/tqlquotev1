@@ -18,10 +18,11 @@ export interface ScenarioInput {
   purchasePrice: number | '';
   downPaymentPct: number | '';
   // Refinance
-  refinanceType: '' | 'Rate & Term' | 'Cashout';
+  refinanceType: '' | 'Rate & Term' | 'Cash Out Refinance';
   currentPropertyValue: number | '';
   ltvPct: number | '';
   currentLoanPayoff: number | '';
+  cashOutAmount: number | '';
   // Costs
   insuranceAnnual: number | '';
   propertyTaxRate: number | '';
@@ -37,7 +38,6 @@ export interface ScenarioInput {
 }
 
 export interface QuoteResult {
-  // Scenario details
   propertyAddress: string;
   loanProgram: string;
   creditScore: string;
@@ -45,6 +45,7 @@ export interface QuoteResult {
   occupancy: string;
   downPaymentOrLtv: string;
   transactionType: string;
+  isConventional: boolean;
   // Loan details
   priceOrValue: number;
   downPaymentOrPayoff: number;
@@ -90,7 +91,7 @@ export interface AppState {
   outputLayout: OutputLayout;
   emailScenarioIndex: number;
   preparedFor: PreparedFor;
-  scenarios: [ScenarioInput, ScenarioInput, ScenarioInput];
+  scenarios: ScenarioInput[];
 }
 
 export const LOAN_PROGRAMS: { name: string; termMonths: number; type: 'Fixed' | 'IO' }[] = [
@@ -124,8 +125,12 @@ export const LOAN_PROGRAMS: { name: string; termMonths: number; type: 'Fixed' | 
 export const PROPERTY_TYPES = ['SFR', 'Duplex (2 Units)', 'Triplex (3 Units)', 'Quadplex (4 Units)', '5-9 Unit', 'Condo', 'Condotel', 'Townhome', 'Manufactured'];
 export const OCCUPANCY_TYPES = ['Primary', '2nd Home', 'Investment'];
 export const CREDIT_SCORE_RANGES = ['780+', '760-779', '740-759', '720-739', '700-719', '680-699', '660-679', '640-659', '620-639', '600-619', '580-599', '<579'];
-export const INCOME_DOC_TYPES = ['No Income Needed', 'Full Documentation', 'Bank Statements', 'Alt Documentation'];
+export const INCOME_DOC_TYPES = ['NONE/Property Cash-Flow', 'Full Documentation', 'Bank Statements', 'Alt Documentation'];
 export const PPP_OPTIONS = ['0 Yr PPP', '1 YR PPP', '2 YR PPP', '3 YR PPP', '4 YR PPP', '5 YR PPP'];
+
+export function isConventionalProgram(program: string): boolean {
+  return program.startsWith('Conv');
+}
 
 export function emptyScenario(): ScenarioInput {
   return {
@@ -144,6 +149,7 @@ export function emptyScenario(): ScenarioInput {
     currentPropertyValue: '',
     ltvPct: '',
     currentLoanPayoff: '',
+    cashOutAmount: '',
     insuranceAnnual: '',
     propertyTaxRate: '',
     hoaDuesMonthly: '',
