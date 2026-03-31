@@ -1,5 +1,7 @@
-import type { ScenarioInput, PreparedFor } from '../../types';
-import { LOAN_PROGRAMS, PROPERTY_TYPES, OCCUPANCY_TYPES, CREDIT_SCORE_RANGES, INCOME_DOC_TYPES, PPP_OPTIONS, isConventionalProgram } from '../../types';
+import { useState } from 'react';
+import type { ScenarioInput, PreparedFor, PropertyAddress } from '../../types';
+import { LOAN_PROGRAMS, PROPERTY_TYPES, OCCUPANCY_TYPES, CREDIT_SCORE_RANGES, INCOME_DOC_TYPES, PPP_OPTIONS, US_STATES, isConventionalProgram } from '../../types';
+import { lookupTaxRate } from '../../utils/propertyTaxData';
 
 interface Props {
   scenarios: ScenarioInput[];
@@ -52,6 +54,27 @@ function TextField({ value, onChange, placeholder }: { value: string; onChange: 
 export default function ScenarioInputsPage({ scenarios, preparedFor, onScenarioChange, onPreparedForChange, onAddScenario, onRemoveScenario }: Props) {
   const count = scenarios.length;
   const colTemplate = `220px ${Array(count).fill('1fr').join(' ')}`;
+  const [taxLookupStatus, setTaxLookupStatus] = useState<Record<number, string>>({});
+
+  const handleAddressChange = (idx: number, field: keyof PropertyAddress, value: string) => {
+    const addr = { ...scenarios[idx].propertyAddress, [field]: value };
+    onScenarioChange(idx, 'propertyAddress', addr);
+  };
+
+  const handleTaxLookup = (idx: number) => {
+    const state = scenarios[idx].propertyAddress.state;
+    if (!state) {
+      setTaxLookupStatus(prev => ({ ...prev, [idx]: 'Enter a state first' }));
+      return;
+    }
+    const result = lookupTaxRate(state);
+    if (result) {
+      onScenarioChange(idx, 'propertyTaxRate', result.rate);
+      setTaxLookupStatus(prev => ({ ...prev, [idx]: `${result.stateName} avg: ${(result.rate * 100).toFixed(3)}%` }));
+    } else {
+      setTaxLookupStatus(prev => ({ ...prev, [idx]: 'State not found' }));
+    }
+  };
 
   // Determine if ANY scenario is Refinance (to show refi section)
   const anyRefi = scenarios.some(s => s.transactionType === 'Refinance');
@@ -95,8 +118,20 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, onScenarioC
         <InputRow label="Transaction Type" count={count}>
           {scenarios.map((s, i) => <SelectField key={i} label="Transaction Type" value={s.transactionType} options={['Purchase', 'Refinance']} onChange={v => onScenarioChange(i, 'transactionType', v)} />)}
         </InputRow>
-        <InputRow label="Property Address" count={count}>
-          {scenarios.map((s, i) => <TextField key={i} value={s.propertyAddress} onChange={v => onScenarioChange(i, 'propertyAddress', v)} placeholder="TBD" />)}
+        <InputRow label="Street Address" count={count}>
+          {scenarios.map((s, i) => <TextField key={i} value={s.propertyAddress.street} onChange={v => handleAddressChange(i, 'street', v)} placeholder="123 Main St" />)}
+        </InputRow>
+        <InputRow label="Unit #" count={count}>
+          {scenarios.map((s, i) => <TextField key={i} value={s.propertyAddress.unit} onChange={v => handleAddressChange(i, 'unit', v)} placeholder="Apt / Suite" />)}
+        </InputRow>
+        <InputRow label="City" count={count}>
+          {scenarios.map((s, i) => <TextField key={i} value={s.propertyAddress.city} onChange={v => handleAddressChange(i, 'city', v)} placeholder="City" />)}
+        </InputRow>
+        <InputRow label="State" count={count}>
+          {scenarios.map((s, i) => <SelectField key={i} label="State" value={s.propertyAddress.state} options={US_STATES} onChange={v => handleAddressChange(i, 'state', v)} />)}
+        </InputRow>
+        <InputRow label="Zip Code" count={count}>
+          {scenarios.map((s, i) => <TextField key={i} value={s.propertyAddress.zip} onChange={v => handleAddressChange(i, 'zip', v)} placeholder="00000" />)}
         </InputRow>
         <InputRow label="Loan Program" count={count}>
           {scenarios.map((s, i) => <SelectField key={i} label="Loan Program" value={s.loanProgram} options={LOAN_PROGRAMS.map(p => p.name)} onChange={v => onScenarioChange(i, 'loanProgram', v)} />)}
@@ -181,8 +216,22 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, onScenarioC
         <InputRow label="Insurance (Annual)" count={count}>
           {scenarios.map((s, i) => <NumField key={i} value={s.insuranceAnnual} onChange={v => onScenarioChange(i, 'insuranceAnnual', v)} placeholder="$0" />)}
         </InputRow>
-        <InputRow label="Property Tax Rate (Annual %)" count={count}>
-          {scenarios.map((s, i) => <NumField key={i} value={s.propertyTaxRate} onChange={v => onScenarioChange(i, 'propertyTaxRate', v)} placeholder="e.g. 0.0125" step="0.001" />)}
+        <InputRow label="Annual Property Tax Est." count={count}>
+          {scenarios.map((s, i) => (
+            <div key={i} className="space-y-1.5">
+              <NumField value={s.propertyTaxRate} onChange={v => onScenarioChange(i, 'propertyTaxRate', v)} placeholder="e.g. 0.0075" step="0.0001" />
+              <button
+                type="button"
+                onClick={() => handleTaxLookup(i)}
+                className="w-full px-2 py-1 text-[11px] font-medium rounded bg-monarch-navy text-white hover:bg-monarch-navy/90 transition-colors"
+              >
+                Property Tax Lookup Est.
+              </button>
+              {taxLookupStatus[i] && (
+                <p className="text-[10px] text-monarch-gold font-medium">{taxLookupStatus[i]}</p>
+              )}
+            </div>
+          ))}
         </InputRow>
         <InputRow label="HOA Dues (Monthly)" count={count}>
           {scenarios.map((s, i) => <NumField key={i} value={s.hoaDuesMonthly} onChange={v => onScenarioChange(i, 'hoaDuesMonthly', v)} placeholder="$0" />)}

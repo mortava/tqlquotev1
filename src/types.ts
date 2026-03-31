@@ -4,9 +4,17 @@ export interface PreparedFor {
   phone: string;
 }
 
+export interface PropertyAddress {
+  street: string;
+  unit: string;
+  city: string;
+  state: string;
+  zip: string;
+}
+
 export interface ScenarioInput {
   transactionType: '' | 'Purchase' | 'Refinance';
-  propertyAddress: string;
+  propertyAddress: PropertyAddress;
   loanProgram: string;
   interestRate: number | '';
   creditScoreRange: string;
@@ -129,6 +137,8 @@ export const LOAN_PROGRAMS: { name: string; termMonths: number; type: 'Fixed' | 
   { name: 'Alt Doc 30 Year Fixed', termMonths: 360, type: 'Fixed' },
 ];
 
+export const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'];
+
 export const PROPERTY_TYPES = ['SFR', 'Duplex (2 Units)', 'Triplex (3 Units)', 'Quadplex (4 Units)', '5-9 Unit', 'Condo', 'Condotel', 'Townhome', 'Manufactured'];
 export const OCCUPANCY_TYPES = ['Primary', '2nd Home', 'Investment'];
 export const CREDIT_SCORE_RANGES = ['780+', '760-779', '740-759', '720-739', '700-719', '680-699', '660-679', '640-659', '620-639', '600-619', '580-599', '<579'];
@@ -139,10 +149,19 @@ export function isConventionalProgram(program: string): boolean {
   return program.startsWith('Conv');
 }
 
+export function emptyAddress(): PropertyAddress {
+  return { street: '', unit: '', city: '', state: '', zip: '' };
+}
+
+export function formatAddress(addr: PropertyAddress): string {
+  const parts = [addr.street, addr.unit, addr.city, addr.state, addr.zip].filter(Boolean);
+  return parts.length > 0 ? parts.join(', ') : '';
+}
+
 export function emptyScenario(): ScenarioInput {
   return {
     transactionType: '',
-    propertyAddress: '',
+    propertyAddress: emptyAddress(),
     loanProgram: '',
     interestRate: '',
     creditScoreRange: '',

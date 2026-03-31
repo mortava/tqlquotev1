@@ -1,5 +1,5 @@
 import type { ScenarioInput, QuoteResult } from '../types';
-import { LOAN_PROGRAMS, isConventionalProgram } from '../types';
+import { LOAN_PROGRAMS, isConventionalProgram, formatAddress } from '../types';
 
 function num(v: number | ''): number {
   return v === '' ? 0 : v;
@@ -109,7 +109,7 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
   const discountPointsFee = num(s.discountPoints) * baseLoanAmount;
 
   return {
-    propertyAddress: s.propertyAddress || '',
+    propertyAddress: formatAddress(s.propertyAddress),
     loanProgram: s.loanProgram,
     creditScore: s.creditScoreRange,
     propertyType: s.propertyType,
