@@ -1,13 +1,14 @@
 import { forwardRef } from 'react';
-import type { QuoteResult, PreparedFor } from '../../../types';
+import type { QuoteResult, PreparedFor, LoanOfficerInfo } from '../../../types';
 import { displayOrBlank, displayRate } from '../../../utils/displayOrBlank';
 
 interface Props {
   results: QuoteResult[];
   preparedFor: PreparedFor;
+  loanOfficer: LoanOfficerInfo;
 }
 
-const PrintLayout = forwardRef<HTMLDivElement, Props>(({ results, preparedFor }, ref) => {
+const PrintLayout = forwardRef<HTMLDivElement, Props>(({ results, preparedFor, loanOfficer }, ref) => {
   const d = (v: number, fmt: 'currency' | 'percent' | 'ratio' = 'currency') => displayOrBlank(v, fmt);
   const anyConv = results.some(r => r.isConventional);
 
@@ -81,7 +82,7 @@ const PrintLayout = forwardRef<HTMLDivElement, Props>(({ results, preparedFor },
           DISCLAIMER: This payment estimate is for informational purposes only and does not constitute a loan commitment, pre-qualification, or pre-approval.
         </p>
         <p className="text-[9px] text-gray-500 mt-2">
-          Prepared by ________________________ &nbsp;|&nbsp; Date: ____________ &nbsp;|&nbsp; NMLS# ____________
+          Prepared by {loanOfficer.name || '________________________'} &nbsp;|&nbsp; Date: {loanOfficer.date || '____________'} &nbsp;|&nbsp; NMLS# {loanOfficer.nmlsNumber || '____________'}
         </p>
       </div>
     </div>

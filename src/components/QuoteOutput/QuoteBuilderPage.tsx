@@ -1,9 +1,11 @@
-import type { QuoteResult, PreparedFor } from '../../types';
+import type { QuoteResult, PreparedFor, LoanOfficerInfo } from '../../types';
 import { displayOrBlank, displayRate } from '../../utils/displayOrBlank';
 
 interface Props {
   results: QuoteResult[];
   preparedFor: PreparedFor;
+  loanOfficer: LoanOfficerInfo;
+  onLoanOfficerChange: (field: keyof LoanOfficerInfo, value: string) => void;
 }
 
 function Val({ v, fmt = 'currency' }: { v: number | string; fmt?: 'currency' | 'percent' | 'ratio' | 'text' }) {
@@ -16,7 +18,7 @@ function StarVal({ v, fmt = 'currency', negative }: { v: number | string; fmt?: 
   return <span className={`text-sm font-semibold ${negative && typeof v === 'number' && v < 0 ? 'text-red-600' : 'text-monarch-navy'}`}>{display}</span>;
 }
 
-export default function QuoteBuilderPage({ results, preparedFor }: Props) {
+export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, onLoanOfficerChange }: Props) {
   const count = results.length;
   const colTemplate = `220px ${Array(count).fill('1fr').join(' ')}`;
   const anyConventional = results.some(r => r.isConventional);
@@ -115,9 +117,37 @@ export default function QuoteBuilderPage({ results, preparedFor }: Props) {
         <p className="text-xs text-monarch-muted leading-relaxed">
           DISCLAIMER: This payment estimate is for informational purposes only and does not constitute a loan commitment, pre-qualification, or pre-approval. Actual rates, terms, fees, and monthly payments may vary based on final underwriting review, credit analysis, and property appraisal. All figures are estimates and subject to change without notice. Contact your loan officer for official pricing.
         </p>
-        <p className="text-xs text-monarch-muted mt-3">
-          Prepared by ________________________ &nbsp;|&nbsp; Date: ____________ &nbsp;|&nbsp; NMLS# ____________
-        </p>
+        <div className="flex items-center gap-3 mt-3 text-xs text-monarch-muted">
+          <div className="flex items-center gap-1.5">
+            <span>Prepared by</span>
+            <input
+              value={loanOfficer.name}
+              onChange={e => onLoanOfficerChange('name', e.target.value)}
+              placeholder="Loan Officer Name"
+              className="border-b border-monarch-border bg-transparent px-1 py-0.5 text-xs text-monarch-navy w-44 focus:border-monarch-gold focus:outline-none"
+            />
+          </div>
+          <span>|</span>
+          <div className="flex items-center gap-1.5">
+            <span>Date:</span>
+            <input
+              type="date"
+              value={loanOfficer.date}
+              onChange={e => onLoanOfficerChange('date', e.target.value)}
+              className="border-b border-monarch-border bg-transparent px-1 py-0.5 text-xs text-monarch-navy focus:border-monarch-gold focus:outline-none"
+            />
+          </div>
+          <span>|</span>
+          <div className="flex items-center gap-1.5">
+            <span>NMLS#</span>
+            <input
+              value={loanOfficer.nmlsNumber}
+              onChange={e => onLoanOfficerChange('nmlsNumber', e.target.value)}
+              placeholder="000000"
+              className="border-b border-monarch-border bg-transparent px-1 py-0.5 text-xs text-monarch-navy w-24 focus:border-monarch-gold focus:outline-none"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

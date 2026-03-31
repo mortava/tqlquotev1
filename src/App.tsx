@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import type { AppState, ActiveView, OutputLayout, ScenarioInput, PreparedFor, QuoteResult } from './types';
+import type { AppState, ActiveView, OutputLayout, ScenarioInput, PreparedFor, QuoteResult, LoanOfficerInfo } from './types';
 import { emptyScenario } from './types';
 import { calculateQuote } from './utils/calculations';
 import ScenarioInputsPage from './components/ScenarioInputs/ScenarioInputsPage';
@@ -14,6 +14,7 @@ function App() {
     outputLayout: 'screen',
     emailScenarioIndex: 0,
     preparedFor: { name: '', email: '', phone: '' },
+    loanOfficer: { name: '', date: new Date().toLocaleDateString('en-US'), nmlsNumber: '' },
     scenarios: [emptyScenario()],
   });
 
@@ -32,6 +33,13 @@ function App() {
     setState(prev => ({
       ...prev,
       preparedFor: { ...prev.preparedFor, [field]: value },
+    }));
+  }, []);
+
+  const handleLoanOfficerChange = useCallback((field: keyof LoanOfficerInfo, value: string) => {
+    setState(prev => ({
+      ...prev,
+      loanOfficer: { ...prev.loanOfficer, [field]: value },
     }));
   }, []);
 
@@ -160,11 +168,11 @@ function App() {
         )}
 
         {state.activeView === 'quote' && state.outputLayout === 'screen' && (
-          <QuoteBuilderPage results={results} preparedFor={state.preparedFor} />
+          <QuoteBuilderPage results={results} preparedFor={state.preparedFor} loanOfficer={state.loanOfficer} onLoanOfficerChange={handleLoanOfficerChange} />
         )}
 
         {state.activeView === 'quote' && state.outputLayout === 'print' && (
-          <PrintLayout ref={printRef} results={results} preparedFor={state.preparedFor} />
+          <PrintLayout ref={printRef} results={results} preparedFor={state.preparedFor} loanOfficer={state.loanOfficer} />
         )}
 
         {state.activeView === 'quote' && state.outputLayout === 'email' && (

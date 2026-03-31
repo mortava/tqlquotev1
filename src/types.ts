@@ -86,11 +86,18 @@ export interface QuoteResult {
 export type ActiveView = 'inputs' | 'quote';
 export type OutputLayout = 'screen' | 'print' | 'email';
 
+export interface LoanOfficerInfo {
+  name: string;
+  date: string;
+  nmlsNumber: string;
+}
+
 export interface AppState {
   activeView: ActiveView;
   outputLayout: OutputLayout;
   emailScenarioIndex: number;
   preparedFor: PreparedFor;
+  loanOfficer: LoanOfficerInfo;
   scenarios: ScenarioInput[];
 }
 
