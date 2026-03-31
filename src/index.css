@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-monarch-bg: #F4F5EE;
+  --color-monarch-navy: #0D3B66;
+  --color-monarch-gold: #C9A84C;
+  --color-monarch-dark: #1a1a2e;
+  --color-monarch-muted: #6b7280;
+  --color-monarch-border: #d1d5db;
+  --color-monarch-card: #ffffff;
+  --color-monarch-section: #f8f9fa;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #F4F5EE;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+@media print {
+  body { background: white !important; }
+  .no-print { display: none !important; }
+}
