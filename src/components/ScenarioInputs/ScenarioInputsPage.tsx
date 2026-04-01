@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import type { ScenarioInput, PreparedFor, PropertyAddress } from '../../types';
+import type { ScenarioInput, PreparedFor, PropertyAddress, LoanOfficerInfo } from '../../types';
 import { LOAN_PROGRAMS, PROPERTY_TYPES, OCCUPANCY_TYPES, CREDIT_SCORE_RANGES, INCOME_DOC_TYPES, PPP_OPTIONS, US_STATES, isConventionalProgram } from '../../types';
 import { lookupTaxRate } from '../../utils/propertyTaxData';
+import { generatePreApproval } from '../../utils/generatePreApproval';
 
 interface Props {
   scenarios: ScenarioInput[];
   preparedFor: PreparedFor;
+  loanOfficer: LoanOfficerInfo;
   onScenarioChange: (idx: number, field: keyof ScenarioInput, value: unknown) => void;
   onPreparedForChange: (field: keyof PreparedFor, value: string) => void;
+  onLoanOfficerChange: (field: keyof LoanOfficerInfo, value: string) => void;
   onAddScenario: () => void;
   onRemoveScenario: (idx: number) => void;
 }
@@ -51,7 +54,7 @@ function TextField({ value, onChange, placeholder }: { value: string; onChange: 
   );
 }
 
-export default function ScenarioInputsPage({ scenarios, preparedFor, onScenarioChange, onPreparedForChange, onAddScenario, onRemoveScenario }: Props) {
+export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer, onScenarioChange, onPreparedForChange, onLoanOfficerChange, onAddScenario, onRemoveScenario }: Props) {
   const count = scenarios.length;
   const colTemplate = `220px ${Array(count).fill('1fr').join(' ')}`;
   const [taxLookupStatus, setTaxLookupStatus] = useState<Record<number, string>>({});
@@ -90,11 +93,20 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, onScenarioC
           <h1 className="text-2xl font-semibold text-monarch-navy tracking-tight">SCENARIO INPUTS</h1>
           <p className="text-sm text-monarch-muted mt-1">Enter loan scenario details below — outputs appear on the Quote Builder page</p>
         </div>
-        <div className="bg-white border border-monarch-border rounded-lg p-4 space-y-2 w-64">
-          <p className="text-xs font-semibold text-monarch-navy uppercase tracking-wider">Prepared For</p>
-          <input value={preparedFor.name} onChange={e => onPreparedForChange('name', e.target.value)} placeholder="Name" className="w-full px-2 py-1.5 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold outline-none" />
-          <input value={preparedFor.email} onChange={e => onPreparedForChange('email', e.target.value)} placeholder="Email" className="w-full px-2 py-1.5 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold outline-none" />
-          <input value={preparedFor.phone} onChange={e => onPreparedForChange('phone', e.target.value)} placeholder="Phone" className="w-full px-2 py-1.5 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold outline-none" />
+        <div className="flex gap-4">
+          <div className="bg-white border border-monarch-border rounded-lg p-4 space-y-2 w-56">
+            <p className="text-xs font-semibold text-monarch-navy uppercase tracking-wider">Prepared For</p>
+            <input value={preparedFor.name} onChange={e => onPreparedForChange('name', e.target.value)} placeholder="Client Name" className="w-full px-2 py-1.5 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold outline-none" />
+            <input value={preparedFor.email} onChange={e => onPreparedForChange('email', e.target.value)} placeholder="Email" className="w-full px-2 py-1.5 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold outline-none" />
+            <input value={preparedFor.phone} onChange={e => onPreparedForChange('phone', e.target.value)} placeholder="Phone" className="w-full px-2 py-1.5 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold outline-none" />
+          </div>
+          <div className="bg-white border border-monarch-border rounded-lg p-4 space-y-2 w-56">
+            <p className="text-xs font-semibold text-monarch-navy uppercase tracking-wider">Loan Officer</p>
+            <input value={loanOfficer.name} onChange={e => onLoanOfficerChange('name', e.target.value)} placeholder="LO Name" className="w-full px-2 py-1.5 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold outline-none" />
+            <input value={loanOfficer.phone} onChange={e => onLoanOfficerChange('phone', e.target.value)} placeholder="Phone" className="w-full px-2 py-1.5 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold outline-none" />
+            <input value={loanOfficer.email} onChange={e => onLoanOfficerChange('email', e.target.value)} placeholder="Email" className="w-full px-2 py-1.5 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold outline-none" />
+            <input value={loanOfficer.nmlsNumber} onChange={e => onLoanOfficerChange('nmlsNumber', e.target.value)} placeholder="NMLS#" className="w-full px-2 py-1.5 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold outline-none" />
+          </div>
         </div>
       </div>
 
@@ -270,15 +282,29 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, onScenarioC
         </InputRow>
       </div>
 
-      {/* Add Scenario Button */}
-      {count < 3 && (
-        <button
-          onClick={onAddScenario}
-          className="w-full py-3 border-2 border-dashed border-monarch-gold/40 rounded-lg text-sm font-medium text-monarch-gold hover:border-monarch-gold hover:bg-monarch-gold/5 transition-colors"
-        >
-          + Add Scenario
-        </button>
-      )}
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        {count < 3 && (
+          <button
+            onClick={onAddScenario}
+            className="flex-1 py-3 border-2 border-dashed border-monarch-gold/40 rounded-lg text-sm font-medium text-monarch-gold hover:border-monarch-gold hover:bg-monarch-gold/5 transition-colors"
+          >
+            + Add Scenario
+          </button>
+        )}
+        {scenarios.map((s, i) => (
+          s.transactionType === 'Purchase' && (
+            <button
+              key={i}
+              onClick={() => generatePreApproval(s, preparedFor, loanOfficer)}
+              className="flex-1 py-3 bg-monarch-navy text-white rounded-lg text-sm font-medium hover:bg-monarch-navy/90 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Generate Pre-Approval{count > 1 ? ` (S${i + 1})` : ''}
+            </button>
+          )
+        ))}
+      </div>
     </div>
   );
 }

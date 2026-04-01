@@ -98,6 +98,9 @@ export interface LoanOfficerInfo {
   name: string;
   date: string;
   nmlsNumber: string;
+  phone: string;
+  email: string;
+  title: string;
 }
 
 export interface AppState {

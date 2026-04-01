@@ -14,7 +14,7 @@ function App() {
     outputLayout: 'screen',
     emailScenarioIndex: 0,
     preparedFor: { name: '', email: '', phone: '' },
-    loanOfficer: { name: '', date: new Date().toLocaleDateString('en-US'), nmlsNumber: '' },
+    loanOfficer: { name: '', date: new Date().toISOString().split('T')[0], nmlsNumber: '', phone: '', email: '', title: 'Loan Officer & Advisor' },
     scenarios: [emptyScenario()],
   });
 
@@ -160,8 +160,10 @@ function App() {
           <ScenarioInputsPage
             scenarios={state.scenarios}
             preparedFor={state.preparedFor}
+            loanOfficer={state.loanOfficer}
             onScenarioChange={handleScenarioChange}
             onPreparedForChange={handlePreparedForChange}
+            onLoanOfficerChange={handleLoanOfficerChange}
             onAddScenario={handleAddScenario}
             onRemoveScenario={handleRemoveScenario}
           />
