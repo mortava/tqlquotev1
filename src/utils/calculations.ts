@@ -5,6 +5,11 @@ function num(v: number | ''): number {
   return v === '' ? 0 : v;
 }
 
+/** Convert user-entered percentage (e.g. 6.5) to decimal (0.065) */
+function pct(v: number | ''): number {
+  return num(v) / 100;
+}
+
 function pmt(rate: number, nper: number, pv: number): number {
   if (rate === 0) return nper === 0 ? 0 : -pv / nper;
   const x = Math.pow(1 + rate, nper);
@@ -20,29 +25,31 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
   const isIO = program.type === 'IO';
   const isPurchase = s.transactionType === 'Purchase';
   const isConv = isConventionalProgram(s.loanProgram);
-  const rate = num(s.interestRate);
+  const rate = pct(s.interestRate); // 6.5 → 0.065
 
   // Price/Value
   const priceOrValue = isPurchase ? num(s.purchasePrice) : num(s.currentPropertyValue);
 
   // Down Payment / Payoff
+  const dpPct = pct(s.downPaymentPct); // 20 → 0.20
   const downPaymentOrPayoff = priceOrValue === 0
     ? 0
     : isPurchase
-      ? priceOrValue * num(s.downPaymentPct)
+      ? priceOrValue * dpPct
       : num(s.currentLoanPayoff);
 
   // Base Loan Amount
+  const ltvPctDecimal = pct(s.ltvPct); // 75 → 0.75
   let baseLoanAmount = 0;
   if (priceOrValue > 0) {
     if (isPurchase) {
       baseLoanAmount = priceOrValue - downPaymentOrPayoff;
     } else {
-      baseLoanAmount = num(s.currentPropertyValue) * num(s.ltvPct);
+      baseLoanAmount = num(s.currentPropertyValue) * ltvPctDecimal;
     }
   }
 
-  // LTV
+  // LTV (as decimal for display)
   const ltv = priceOrValue === 0 ? 0 : baseLoanAmount / priceOrValue;
 
   // Loan w/ UFMIP (only for Conventional)
@@ -63,9 +70,10 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
 
   // Monthly breakdowns
   const insuranceMonthly = num(s.insuranceAnnual) / 12;
-  const taxesMonthly = priceOrValue * num(s.propertyTaxRate) / 12;
-  // MI only applies to Conventional
-  const mortgageInsuranceMonthly = isConv ? num(s.miRate) * baseLoanAmount / 12 : 0;
+  const taxRateDecimal = pct(s.propertyTaxRate); // 0.75 → 0.0075
+  const taxesMonthly = priceOrValue * taxRateDecimal / 12;
+  const miRateDecimal = pct(s.miRate); // 0.5 → 0.005
+  const mortgageInsuranceMonthly = isConv ? miRateDecimal * baseLoanAmount / 12 : 0;
   const hoaMonthly = num(s.hoaDuesMonthly);
 
   const totalMonthlyPayment = principalAndInterest + insuranceMonthly + taxesMonthly + mortgageInsuranceMonthly + hoaMonthly;
@@ -80,13 +88,14 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
   const downPaymentOrLtv = s.transactionType === ''
     ? ''
     : isPurchase
-      ? `${(num(s.downPaymentPct) * 100).toFixed(0)}%`
-      : `${(num(s.ltvPct) * 100).toFixed(0)}%`;
+      ? `${num(s.downPaymentPct).toFixed(0)}%`
+      : `${num(s.ltvPct).toFixed(0)}%`;
 
   // Closing costs
   const tqlFlatFee = baseLoanAmount * 0.0109;
   const tqlProcessingFee = s.tqlComplianceFee;
-  const tqlLowerRateDiscount = baseLoanAmount * num(s.tqlLowerRateOption);
+  const lowerRateDecimal = pct(s.tqlLowerRateOption);
+  const tqlLowerRateDiscount = baseLoanAmount * lowerRateDecimal;
 
   const isConvFhaVa = s.loanProgram.startsWith('Conv') || s.loanProgram.startsWith('FHA') || s.loanProgram.startsWith('VA');
   const thirdPartyCertifications = s.loanProgram === '' ? 0 : isConvFhaVa ? 350 : 695;
@@ -94,7 +103,8 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
   const titleFees = num(s.escrowTitleFee);
   const prepaids = num(s.insuranceAnnual) + (taxesMonthly * 4) + (baseLoanAmount * rate / 365 * 5);
   const escrowAtClosing = (insuranceMonthly * 3) + (taxesMonthly * 4);
-  const sellerCredit = priceOrValue === 0 ? 0 : priceOrValue * num(s.sellerCreditPct) * -1;
+  const sellerCreditDecimal = pct(s.sellerCreditPct);
+  const sellerCredit = priceOrValue === 0 ? 0 : priceOrValue * sellerCreditDecimal * -1;
 
   let estimatedCashToClose = 0;
   if (priceOrValue > 0) {
@@ -106,7 +116,8 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
   }
 
   const pitiaReserves = totalMonthlyPayment * num(s.pitiaReserveMonths);
-  const discountPointsFee = num(s.discountPoints) * baseLoanAmount;
+  const discountPtsDecimal = pct(s.discountPoints);
+  const discountPointsFee = discountPtsDecimal * baseLoanAmount;
 
   return {
     propertyAddress: formatAddress(s.propertyAddress),

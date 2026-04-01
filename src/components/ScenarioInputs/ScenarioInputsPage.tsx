@@ -73,7 +73,7 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
     const result = lookupTaxRate(state);
     if (result) {
       onScenarioChange(idx, 'propertyTaxRate', result.rate);
-      setTaxLookupStatus(prev => ({ ...prev, [idx]: `${result.stateName} avg: ${(result.rate * 100).toFixed(3)}%` }));
+      setTaxLookupStatus(prev => ({ ...prev, [idx]: `${result.stateName} avg: ${result.rate.toFixed(3)}%` }));
     } else {
       setTaxLookupStatus(prev => ({ ...prev, [idx]: 'State not found' }));
     }
@@ -148,8 +148,8 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
         <InputRow label="Loan Program" count={count}>
           {scenarios.map((s, i) => <SelectField key={i} label="Loan Program" value={s.loanProgram} options={LOAN_PROGRAMS.map(p => p.name)} onChange={v => onScenarioChange(i, 'loanProgram', v)} />)}
         </InputRow>
-        <InputRow label="Interest Rate" count={count}>
-          {scenarios.map((s, i) => <NumField key={i} value={s.interestRate} onChange={v => onScenarioChange(i, 'interestRate', v)} placeholder="e.g. 0.065" step="0.001" />)}
+        <InputRow label="Interest Rate (%)" count={count}>
+          {scenarios.map((s, i) => <NumField key={i} value={s.interestRate} onChange={v => onScenarioChange(i, 'interestRate', v)} placeholder="e.g. 6.5" step="0.125" />)}
         </InputRow>
         <InputRow label="Credit Score Range" count={count}>
           {scenarios.map((s, i) => <SelectField key={i} label="Credit Score" value={s.creditScoreRange} options={CREDIT_SCORE_RANGES} onChange={v => onScenarioChange(i, 'creditScoreRange', v)} />)}
@@ -179,7 +179,7 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
             </InputRow>
             <InputRow label="Down Payment (%)" count={count}>
               {scenarios.map((s, i) => s.transactionType === 'Purchase'
-                ? <NumField key={i} value={s.downPaymentPct} onChange={v => onScenarioChange(i, 'downPaymentPct', v)} placeholder="e.g. 0.20" step="0.01" />
+                ? <NumField key={i} value={s.downPaymentPct} onChange={v => onScenarioChange(i, 'downPaymentPct', v)} placeholder="e.g. 20" step="1" />
                 : <div key={i} className="text-xs text-monarch-muted italic">N/A</div>
               )}
             </InputRow>
@@ -202,15 +202,23 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
                 : <div key={i} className="text-xs text-monarch-muted italic">N/A</div>
               )}
             </InputRow>
-            <InputRow label="Loan-to-Value (LTV %)" count={count}>
+            <InputRow label="Current Loan Payoff" count={count}>
               {scenarios.map((s, i) => s.transactionType === 'Refinance'
-                ? <NumField key={i} value={s.ltvPct} onChange={v => onScenarioChange(i, 'ltvPct', v)} placeholder="e.g. 0.75" step="0.01" />
+                ? <NumField key={i} value={s.currentLoanPayoff} onChange={v => {
+                    onScenarioChange(i, 'currentLoanPayoff', v);
+                    // Auto-calculate LTV when payoff and value are both entered
+                    const val = typeof s.currentPropertyValue === 'number' ? s.currentPropertyValue : 0;
+                    const payoff = typeof v === 'number' ? v : 0;
+                    if (val > 0 && payoff > 0) {
+                      onScenarioChange(i, 'ltvPct', Math.round((payoff / val) * 100 * 100) / 100);
+                    }
+                  }} placeholder="$0" />
                 : <div key={i} className="text-xs text-monarch-muted italic">N/A</div>
               )}
             </InputRow>
-            <InputRow label="Current Loan Payoff" count={count}>
+            <InputRow label="Loan-to-Value (LTV %)" count={count}>
               {scenarios.map((s, i) => s.transactionType === 'Refinance'
-                ? <NumField key={i} value={s.currentLoanPayoff} onChange={v => onScenarioChange(i, 'currentLoanPayoff', v)} placeholder="$0" />
+                ? <NumField key={i} value={s.ltvPct} onChange={v => onScenarioChange(i, 'ltvPct', v)} placeholder="e.g. 75" step="1" />
                 : <div key={i} className="text-xs text-monarch-muted italic">N/A</div>
               )}
             </InputRow>
@@ -231,7 +239,7 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
         <InputRow label="Annual Property Tax Est." count={count}>
           {scenarios.map((s, i) => (
             <div key={i} className="space-y-1.5">
-              <NumField value={s.propertyTaxRate} onChange={v => onScenarioChange(i, 'propertyTaxRate', v)} placeholder="e.g. 0.0075" step="0.0001" />
+              <NumField value={s.propertyTaxRate} onChange={v => onScenarioChange(i, 'propertyTaxRate', v)} placeholder="e.g. 0.75" step="0.01" />
               <button
                 type="button"
                 onClick={() => handleTaxLookup(i)}
@@ -256,14 +264,14 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
         {anyConventional && (
           <InputRow label="MI / UFMIP Rate (%)" count={count}>
             {scenarios.map((s, i) => isConventionalProgram(s.loanProgram)
-              ? <NumField key={i} value={s.miRate} onChange={v => onScenarioChange(i, 'miRate', v)} placeholder="e.g. 0.005" step="0.001" />
+              ? <NumField key={i} value={s.miRate} onChange={v => onScenarioChange(i, 'miRate', v)} placeholder="e.g. 0.5" step="0.01" />
               : <div key={i} className="text-xs text-monarch-muted italic">N/A</div>
             )}
           </InputRow>
         )}
 
         <InputRow label="Seller Credit (%)" count={count}>
-          {scenarios.map((s, i) => <NumField key={i} value={s.sellerCreditPct} onChange={v => onScenarioChange(i, 'sellerCreditPct', v)} placeholder="e.g. 0.03" step="0.01" />)}
+          {scenarios.map((s, i) => <NumField key={i} value={s.sellerCreditPct} onChange={v => onScenarioChange(i, 'sellerCreditPct', v)} placeholder="e.g. 3" step="0.5" />)}
         </InputRow>
         <InputRow label="Escrow / Title Fee Est." count={count}>
           {scenarios.map((s, i) => <NumField key={i} value={s.escrowTitleFee} onChange={v => onScenarioChange(i, 'escrowTitleFee', v)} placeholder="$0" />)}
@@ -272,10 +280,10 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
           {scenarios.map((s, i) => <NumField key={i} value={s.tqlComplianceFee} onChange={v => onScenarioChange(i, 'tqlComplianceFee', v === '' ? 1795 : v as number)} />)}
         </InputRow>
         <InputRow label="TQL Lower Rate Option (%)" count={count}>
-          {scenarios.map((s, i) => <NumField key={i} value={s.tqlLowerRateOption} onChange={v => onScenarioChange(i, 'tqlLowerRateOption', v)} placeholder="e.g. 0.06" step="0.001" />)}
+          {scenarios.map((s, i) => <NumField key={i} value={s.tqlLowerRateOption} onChange={v => onScenarioChange(i, 'tqlLowerRateOption', v)} placeholder="e.g. 0.5" step="0.125" />)}
         </InputRow>
         <InputRow label="Discount Points (%)" count={count}>
-          {scenarios.map((s, i) => <NumField key={i} value={s.discountPoints} onChange={v => onScenarioChange(i, 'discountPoints', v)} placeholder="e.g. 0.01" step="0.001" />)}
+          {scenarios.map((s, i) => <NumField key={i} value={s.discountPoints} onChange={v => onScenarioChange(i, 'discountPoints', v)} placeholder="e.g. 1" step="0.25" />)}
         </InputRow>
         <InputRow label="PITIA Reserve Months" count={count}>
           {scenarios.map((s, i) => <NumField key={i} value={s.pitiaReserveMonths} onChange={v => onScenarioChange(i, 'pitiaReserveMonths', v)} placeholder="0" />)}

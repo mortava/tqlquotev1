@@ -204,14 +204,14 @@ export const TAX_DATA: TaxDatabase = {
 
 /**
  * Look up the property tax rate for a given state (2-letter code).
- * Returns the rate as a decimal (e.g., 0.0075 for 0.75%).
- * Uses state average rate.
+ * Returns the rate as a human-readable percentage (e.g., 0.75 for 0.75%).
+ * The form stores percentages in human format, calculations divide by 100.
  */
 export function lookupTaxRate(stateCode: string): { rate: number; stateName: string } | null {
   const code = stateCode.toUpperCase().trim();
   const stateData = TAX_DATA.states[code];
   if (!stateData) return null;
-  return { rate: stateData.rate / 100, stateName: stateData.name };
+  return { rate: stateData.rate, stateName: stateData.name };
 }
 
 /**
@@ -235,6 +235,6 @@ export function lookupTaxRateByCounty(stateCode: string, countyName: string): nu
   const county = stateData.counties.find(
     c => c.name.toLowerCase() === countyName.toLowerCase()
   );
-  // Return county rate if found, else state average — both as decimal
-  return (county ? county.rate : stateData.rate) / 100;
+  // Return county rate if found, else state average — as human-readable %
+  return county ? county.rate : stateData.rate;
 }
