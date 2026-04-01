@@ -73,7 +73,7 @@ export async function generatePreApproval(
 
   // Save and download
   const pdfBytes = await pdfDoc.save();
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const blob = new Blob([pdfBytes as BlobPart], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
 
   const fileName = `TQL_PreApproval_${preparedFor.name.replace(/\s+/g, '_') || 'Client'}_${loanOfficer.date}.pdf`;
