@@ -85,7 +85,6 @@ export async function generatePreApproval(
   const docs = scenario.docsReceived || [];
   // PDF has 6 checkbox slots (doc_0 through doc_5) and 4 dropdown slots
   // Map doc selections to the dropdown fields
-  const dropdownFields = ['Dropdown3', 'Dropdown44', 'Dropdown66', 'Dropdown55'];
   const checkboxFields = ['doc_0', 'doc_1', 'doc_2', 'doc_3', 'doc_4', 'doc_5'];
 
   // Map known docs to their PDF dropdown values
