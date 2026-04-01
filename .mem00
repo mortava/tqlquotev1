@@ -1,0 +1,71 @@
+# Session Memory — tqlquotev1
+**Date**: 2026-03-31 ~23:00 CT
+**Branch**: master
+**Session Focus**: Built TQL Quote Payment Estimator from scratch (Excel spec → React app), iterated through 7 commits adding features
+
+## Status
+- **Completed**: Full 2-page app (Scenario Inputs + Quote Builder), dynamic scenarios (1-3), Print PDF, Outlook HTML email copy, Pre-Approval PDF generator, property tax lookup, standard % formatting
+- **In Progress**: Nothing — all committed and deployed
+- **Next Up**: User may want further refinements, additional PDF templates, or UI polish
+- **Blockers**: None
+
+## Change Tree
+```
+created:   src/App.tsx                          — Main app, state management, nav tabs, layout switching
+created:   src/types.ts                         — All interfaces (ScenarioInput, QuoteResult, PropertyAddress, LoanOfficerInfo, AppState)
+created:   src/utils/calculations.ts            — Core mortgage math: PMT, IO, DSCR, closing costs, PITIA. pct() converts human % to decimal
+created:   src/utils/displayOrBlank.ts          — Format helpers: currency, percent, ratio. Empty fields show blank not $0
+created:   src/utils/propertyTaxData.ts         — Embedded US Census ACS tax data for all 50 states + county-level for major metros
+created:   src/utils/generatePreApproval.ts     — pdf-lib fills TQL Pre-Approval template, triggers download
+created:   src/components/ScenarioInputs/       — Dynamic scenario grid, conditional Purchase/Refinance/Conventional sections
+created:   src/components/QuoteOutput/          — QuoteBuilderPage (screen), PrintLayout (react-to-print), EmailLayout (HTML clipboard)
+created:   public/tql-preapproval-template.pdf  — TQL Pre-Approval PDF template with form fields
+```
+
+## Key Decisions
+- **Vite 8 + rolldown** requires `import type` for all TS interface imports or MISSING_EXPORT error
+- **pdf-lib enableReadOnly()** — never use form.flatten() on TQL PDFs (crashes per known issue)
+- **Uint8Array cast** — `pdfBytes as BlobPart` needed for Vercel's stricter TS build
+- **Percentage inputs stored as human-readable** (6.5 not 0.065) — `pct()` helper divides by 100 in calculations
+- **Property tax lookup** returns rate as-is from data (0.75 = 0.75%) since form stores human %
+- **Dynamic scenario count** — starts with 1, +Add Scenario up to 3. Grid uses inline style gridTemplateColumns
+- **Email copy** uses ClipboardItem API with text/html MIME type for Outlook rendering
+- **LTV auto-calculates** when both Current Property Value and Current Loan Payoff entered on Refinance
+
+## Commands
+```bash
+# Dev server
+cd C:/Users/beach/tqlquotev1 && npm run dev -- --port 5180
+
+# Build
+npm run build
+
+# Deploy
+npx vercel --prod --yes
+
+# Type check
+npx tsc --noEmit
+```
+
+## Technical Notes
+- **PDF form field names**: date, mlo name, lo_title, lo_nmls, lo_phone, lo_email, client, property_address, offer_price, ltv, max ltv, max_loan_amount, loan_type, fico, Text11 (signature), additional_notes, doc_0-5 (checkboxes), Dropdown3/44/55/66 (doc type dropdowns)
+- **Tax data structure**: TAX_DATA.states[stateCode].rate = state avg %, .counties[].rate = county %
+- **MONARCH brand**: #F4F5EE bg, #0D3B66 navy, #C9A84C gold, Inter font
+- **Vercel project**: james-projects-d94c6754/tqlquotev1
+- **GitHub**: mortava/tqlquotev1
+
+## Recent Commits
+```
+f15fdcb fix: standard percentage formatting + auto-LTV calculation
+f10556b fix: TypeScript Uint8Array/BlobPart compat for Vercel build
+8576601 feat: Generate Pre-Approval Letter PDF from scenario data
+b069222 feat: property address breakdown + tax rate lookup by state
+8700602 feat: editable Loan Officer name, date, and NMLS# in Quote Builder disclaimer
+74b81a8 refactor: dynamic scenarios, conditional fields, clean HTML email copy
+a6f674e feat: TQL Quote Payment Estimator v1 — 2-page layout with 3-scenario inputs, quote builder, print PDF, and Outlook email export
+```
+
+## Uncommitted Changes
+```
+None — all committed and deployed
+```
