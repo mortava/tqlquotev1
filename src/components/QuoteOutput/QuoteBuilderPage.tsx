@@ -85,6 +85,20 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
 
         {/* Investment Analysis */}
         <Section label="INVESTMENT ANALYSIS" count={count} />
+        {/* Gold checkmark for Investment occupancy */}
+        <div className="border-t border-monarch-border/50" style={{ display: 'grid', gridTemplateColumns: colTemplate }}>
+          <div className="px-4 py-2"></div>
+          {results.map((r, i) => (
+            <div key={i} className="px-3 py-2 text-center">
+              {r.occupancy === 'Investment' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-monarch-gold/10 border border-monarch-gold/30">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  <span className="text-[11px] font-semibold text-monarch-gold">Above National Avg</span>
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
         <Row label="Monthly Rents" count={count}>{results.map((r, i) => <Val key={i} v={r.monthlyRents} />)}</Row>
         <HighlightRow label="DSCR Ratio" count={count}>{results.map((r, i) => <StarVal key={i} v={r.dscrRatio} fmt="ratio" />)}</HighlightRow>
         <HighlightRow label="Monthly Net Cash Flow" count={count}>{results.map((r, i) => <StarVal key={i} v={r.monthlyNetCashFlow} negative />)}</HighlightRow>
