@@ -41,8 +41,8 @@ export interface ScenarioInput {
   escrowTitleFee: number | '';
   tqlComplianceFee: number;
   tqlLowerRateOption: number | '';
-  discountPoints: number | '';
   pitiaReserveMonths: number | '';
+  docsReceived: string[];
 }
 
 export interface QuoteResult {
@@ -74,7 +74,7 @@ export interface QuoteResult {
   monthlyRents: number;
   dscrRatio: number;
   monthlyNetCashFlow: number;
-  prePaymentPenalty: string;
+  potentialAnnualIncome: number;
   // Closing costs
   partnerForLife: string;
   tqlFlatFee: number;
@@ -88,7 +88,6 @@ export interface QuoteResult {
   sellerCredit: number;
   estimatedCashToClose: number;
   pitiaReserves: number;
-  discountPointsFee: number;
 }
 
 export type ActiveView = 'inputs' | 'quote';
@@ -147,6 +146,17 @@ export const OCCUPANCY_TYPES = ['Primary', '2nd Home', 'Investment'];
 export const CREDIT_SCORE_RANGES = ['780+', '760-779', '740-759', '720-739', '700-719', '680-699', '660-679', '640-659', '620-639', '600-619', '580-599', '<579'];
 export const INCOME_DOC_TYPES = ['NONE/Property Cash-Flow', 'Full Documentation', 'Bank Statements', 'Alt Documentation'];
 export const PPP_OPTIONS = ['0 Yr PPP', '1 YR PPP', '2 YR PPP', '3 YR PPP', '4 YR PPP', '5 YR PPP'];
+export const DOCS_RECEIVED_OPTIONS = [
+  'Proof of Down Payment Funds',
+  'TQL Ascend\u2122 Approved',
+  'Most Recent 1040 Tax Returns',
+  'Most Recent W2',
+  'Current Pay Check Verified',
+  'Most Recent 1099',
+  'Bank Statements Verified',
+  '12m Profit & Loss',
+  'Assets Confirmed',
+];
 
 export function isConventionalProgram(program: string): boolean {
   return program.startsWith('Conv');
@@ -188,7 +198,7 @@ export function emptyScenario(): ScenarioInput {
     escrowTitleFee: '',
     tqlComplianceFee: 1795,
     tqlLowerRateOption: '',
-    discountPoints: '',
     pitiaReserveMonths: '',
+    docsReceived: [],
   };
 }

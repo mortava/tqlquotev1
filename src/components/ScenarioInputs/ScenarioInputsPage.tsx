@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ScenarioInput, PreparedFor, PropertyAddress, LoanOfficerInfo } from '../../types';
-import { LOAN_PROGRAMS, PROPERTY_TYPES, OCCUPANCY_TYPES, CREDIT_SCORE_RANGES, INCOME_DOC_TYPES, PPP_OPTIONS, US_STATES, isConventionalProgram } from '../../types';
+import { LOAN_PROGRAMS, PROPERTY_TYPES, OCCUPANCY_TYPES, CREDIT_SCORE_RANGES, INCOME_DOC_TYPES, PPP_OPTIONS, US_STATES, DOCS_RECEIVED_OPTIONS, isConventionalProgram } from '../../types';
 import { lookupTaxRate } from '../../utils/propertyTaxData';
 import { generatePreApproval } from '../../utils/generatePreApproval';
 
@@ -282,12 +282,41 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
         <InputRow label="TQL Lower Rate Option (%)" count={count}>
           {scenarios.map((s, i) => <NumField key={i} value={s.tqlLowerRateOption} onChange={v => onScenarioChange(i, 'tqlLowerRateOption', v)} placeholder="e.g. 0.5" step="0.125" />)}
         </InputRow>
-        <InputRow label="Discount Points (%)" count={count}>
-          {scenarios.map((s, i) => <NumField key={i} value={s.discountPoints} onChange={v => onScenarioChange(i, 'discountPoints', v)} placeholder="e.g. 1" step="0.25" />)}
-        </InputRow>
         <InputRow label="PITIA Reserve Months" count={count}>
           {scenarios.map((s, i) => <NumField key={i} value={s.pitiaReserveMonths} onChange={v => onScenarioChange(i, 'pitiaReserveMonths', v)} placeholder="0" />)}
         </InputRow>
+      </div>
+
+      {/* Documents Received & Reviewed (for Pre-Approval) */}
+      <div className="bg-white border border-monarch-border rounded-lg overflow-hidden">
+        <div className="bg-monarch-navy text-white px-4 py-2">
+          <span className="text-xs font-bold uppercase tracking-wider">Documents Received & Reviewed</span>
+        </div>
+        <div className="p-4">
+          <p className="text-xs text-monarch-muted mb-3">Select qualifying documents reviewed for Pre-Approval letter:</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {DOCS_RECEIVED_OPTIONS.map(doc => {
+              const checked = scenarios[0]?.docsReceived?.includes(doc) ?? false;
+              return (
+                <label key={doc} className="flex items-center gap-2 px-3 py-2 rounded border border-monarch-border/50 hover:bg-monarch-section cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => {
+                      scenarios.forEach((s, i) => {
+                        const current = s.docsReceived || [];
+                        const updated = checked ? current.filter(d => d !== doc) : [...current, doc];
+                        onScenarioChange(i, 'docsReceived', updated);
+                      });
+                    }}
+                    className="w-4 h-4 rounded border-monarch-border text-monarch-navy focus:ring-monarch-gold accent-monarch-navy"
+                  />
+                  <span className="text-xs text-monarch-navy">{doc}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Action Buttons */}

@@ -28,7 +28,7 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-monarch-navy tracking-tight">QUOTE BUILDER</h1>
+          <h1 className="text-2xl font-semibold text-monarch-navy tracking-tight">QUOTE LAB</h1>
           <p className="text-sm text-monarch-muted mt-1">Payment Estimator &nbsp;|&nbsp; For Informational Purposes Only</p>
         </div>
         <div className="bg-white border border-monarch-border rounded-lg p-4 w-64">
@@ -88,7 +88,7 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
         <Row label="Monthly Rents" count={count}>{results.map((r, i) => <Val key={i} v={r.monthlyRents} />)}</Row>
         <HighlightRow label="DSCR Ratio" count={count}>{results.map((r, i) => <StarVal key={i} v={r.dscrRatio} fmt="ratio" />)}</HighlightRow>
         <HighlightRow label="Monthly Net Cash Flow" count={count}>{results.map((r, i) => <StarVal key={i} v={r.monthlyNetCashFlow} negative />)}</HighlightRow>
-        <Row label="Pre-Payment Penalty" count={count}>{results.map((r, i) => <Val key={i} v={r.prePaymentPenalty} fmt="text" />)}</Row>
+        <Row label="Potential Annual Income" count={count}>{results.map((r, i) => <Val key={i} v={r.potentialAnnualIncome} />)}</Row>
 
         {/* Closing Cost Breakdown */}
         <Section label="CLOSING COST BREAKDOWN" count={count} />
@@ -104,7 +104,6 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
         <Row label="Seller Credit" count={count}>{results.map((r, i) => <Val key={i} v={r.sellerCredit} />)}</Row>
         <HighlightRow label="Estimated Cash to Close" count={count}>{results.map((r, i) => <StarVal key={i} v={r.estimatedCashToClose} />)}</HighlightRow>
         <HighlightRow label="PITIA Reserves Required" count={count}>{results.map((r, i) => <StarVal key={i} v={r.pitiaReserves} />)}</HighlightRow>
-        <Row label="Discount Points Fee" count={count}>{results.map((r, i) => <Val key={i} v={r.discountPointsFee} />)}</Row>
 
         {/* Fees Paid Before Closing */}
         <Section label="FEES PAID BEFORE CLOSING" count={count} />

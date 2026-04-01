@@ -64,6 +64,7 @@ const PrintLayout = forwardRef<HTMLDivElement, Props>(({ results, preparedFor, l
           <DataRow label="Monthly Rents">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{d(r.monthlyRents)}</td>)}</DataRow>
           <StarRow label="DSCR Ratio">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center font-bold text-[#0D3B66]">{d(r.dscrRatio, 'ratio')}</td>)}</StarRow>
           <StarRow label="Net Cash Flow">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center font-bold text-[#0D3B66]">{d(r.monthlyNetCashFlow)}</td>)}</StarRow>
+          <DataRow label="Potential Annual Income">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{d(r.potentialAnnualIncome)}</td>)}</DataRow>
 
           <SectionRow label="CLOSING COSTS" />
           <DataRow label="TQL Flat Fee">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{d(r.tqlFlatFee)}</td>)}</DataRow>

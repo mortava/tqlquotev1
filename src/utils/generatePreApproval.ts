@@ -12,7 +12,6 @@ export async function generatePreApproval(
   const result = calculateQuote(scenario);
   const d = (v: number) => displayOrBlank(v, 'currency');
 
-  // Fetch the template PDF
   const templateUrl = `${window.location.origin}/tql-preapproval-template.pdf`;
   const response = await fetch(templateUrl);
   const templateBytes = await response.arrayBuffer();
@@ -20,14 +19,31 @@ export async function generatePreApproval(
   const pdfDoc = await PDFDocument.load(templateBytes);
   const form = pdfDoc.getForm();
 
-  // Fill text fields — using enableReadOnly() per TQL PDF rule (never flatten)
   const setField = (name: string, value: string) => {
     try {
       const field = form.getTextField(name);
       field.setText(value);
       field.enableReadOnly();
     } catch {
-      // Field not found — skip silently
+      // Field not found
+    }
+  };
+
+  const setCheckbox = (name: string, checked: boolean) => {
+    try {
+      const field = form.getCheckBox(name);
+      if (checked) field.check(); else field.uncheck();
+    } catch {
+      // Field not found
+    }
+  };
+
+  const setDropdown = (name: string, value: string) => {
+    try {
+      const field = form.getDropdown(name);
+      field.select(value);
+    } catch {
+      // Field not found or value not in options
     }
   };
 
@@ -65,11 +81,48 @@ export async function generatePreApproval(
     : 'YES / A+';
   setField('fico', creditDisplay);
 
-  // Additional notes
-  setField('additional_notes', '');
+  // Documents Received — map selected docs to PDF checkboxes & dropdowns
+  const docs = scenario.docsReceived || [];
+  // PDF has 6 checkbox slots (doc_0 through doc_5) and 4 dropdown slots
+  // Map doc selections to the dropdown fields
+  const dropdownFields = ['Dropdown3', 'Dropdown44', 'Dropdown66', 'Dropdown55'];
+  const checkboxFields = ['doc_0', 'doc_1', 'doc_2', 'doc_3', 'doc_4', 'doc_5'];
 
-  // Authorized signature line
-  setField('Text11', loanOfficer.name);
+  // Map known docs to their PDF dropdown values
+  const dropdownMap: Record<string, { field: string; value: string }> = {
+    'Most Recent 1040 Tax Returns': { field: 'Dropdown3', value: 'Most 1040 Tax Returns' },
+    'Current Pay Check Verified': { field: 'Dropdown44', value: 'Current Pay Stub' },
+    'Most Recent W2': { field: 'Dropdown66', value: 'Most 1040 Tax Returns' },
+    'Proof of Down Payment Funds': { field: 'Dropdown55', value: 'Proof of Down Payment Funds' },
+  };
+
+  // Check boxes for docs that have mappings
+  let checkIdx = 0;
+  docs.forEach(doc => {
+    const mapping = dropdownMap[doc];
+    if (mapping) {
+      try { setDropdown(mapping.field, mapping.value); } catch { /* skip */ }
+      if (checkIdx < checkboxFields.length) {
+        setCheckbox(checkboxFields[checkIdx], true);
+        checkIdx++;
+      }
+    } else if (checkIdx < checkboxFields.length) {
+      setCheckbox(checkboxFields[checkIdx], true);
+      checkIdx++;
+    }
+  });
+
+  // Clear unused checkboxes
+  for (let i = checkIdx; i < checkboxFields.length; i++) {
+    setCheckbox(checkboxFields[i], false);
+  }
+
+  // Additional notes — clear
+  setField('additional_notes', '');
+  // Signature text field — leave empty (not LO name)
+  setField('Text11', '');
+  // Clear unused text/dropdown slots
+  setField('Text190', '');
 
   // Save and download
   const pdfBytes = await pdfDoc.save();

@@ -116,8 +116,7 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
   }
 
   const pitiaReserves = totalMonthlyPayment * num(s.pitiaReserveMonths);
-  const discountPtsDecimal = pct(s.discountPoints);
-  const discountPointsFee = discountPtsDecimal * baseLoanAmount;
+  const potentialAnnualIncome = monthlyNetCashFlow * 12;
 
   return {
     propertyAddress: formatAddress(s.propertyAddress),
@@ -145,7 +144,7 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
     monthlyRents,
     dscrRatio,
     monthlyNetCashFlow,
-    prePaymentPenalty: s.prePaymentPenalty,
+    potentialAnnualIncome,
     partnerForLife: s.transactionType === '' ? '' : 'YES',
     tqlFlatFee,
     tqlProcessingFee,
@@ -158,6 +157,5 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
     sellerCredit,
     estimatedCashToClose,
     pitiaReserves,
-    discountPointsFee,
   };
 }

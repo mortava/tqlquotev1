@@ -74,8 +74,8 @@ function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-1">
-              <span className="text-monarch-gold font-bold text-lg tracking-tight">TQL</span>
-              <span className="text-white/80 text-sm font-light">Quote Builder</span>
+              <span className="text-white font-bold text-lg tracking-tight">TQL</span>
+              <span className="text-white text-sm font-semibold tracking-wide">QUOTE LAB</span>
             </div>
             <div className="flex items-center gap-1">
               <button
