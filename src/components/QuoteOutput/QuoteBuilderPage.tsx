@@ -25,23 +25,45 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-monarch-navy tracking-tight">QUOTE LAB</h1>
-          <p className="text-sm text-monarch-muted mt-1">Payment Estimator &nbsp;|&nbsp; For Informational Purposes Only</p>
+      {/* CLEAR QUOTE Header */}
+      <div className="bg-white border border-monarch-border rounded-lg p-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <img src="/tql-logo.png" alt="Total Quality Lending" className="h-12" />
+            <div>
+              <h1 className="text-2xl font-bold text-monarch-navy tracking-tight">CLEAR QUOTE</h1>
+              <p className="text-sm text-monarch-muted italic">Clarity in the Costs&trade;</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold text-monarch-navy uppercase tracking-wider">Prepared For</p>
+            <p className="text-sm font-semibold text-monarch-navy">{preparedFor.name || '—'}</p>
+            <p className="text-xs text-monarch-muted">{preparedFor.email}</p>
+          </div>
         </div>
-        <div className="bg-white border border-monarch-border rounded-lg p-4 w-64">
-          <p className="text-xs font-semibold text-monarch-navy uppercase tracking-wider mb-2">Prepared For</p>
-          <p className="text-sm">{preparedFor.name || '—'}</p>
-          <p className="text-sm text-monarch-muted">{preparedFor.email}</p>
-          <p className="text-sm text-monarch-muted">{preparedFor.phone}</p>
+        <div className="h-[3px] bg-monarch-navy mt-4 rounded-full" />
+      </div>
+
+      {/* MLO Contact Bar */}
+      <div className="bg-monarch-navy rounded-lg px-5 py-3 flex items-center justify-between text-white">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold">
+            {loanOfficer.name ? loanOfficer.name.split(' ').map(n => n[0]).join('') : 'LO'}
+          </div>
+          <div>
+            <p className="text-sm font-semibold">{loanOfficer.name || 'Loan Officer'}</p>
+            <p className="text-[11px] text-white/70">{loanOfficer.title || 'Loan Officer & Advisor'}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-6 text-xs text-white/80">
+          {loanOfficer.phone && <span>{loanOfficer.phone}</span>}
+          {loanOfficer.email && <span>{loanOfficer.email}</span>}
+          {loanOfficer.nmlsNumber && <span>NMLS# {loanOfficer.nmlsNumber}</span>}
         </div>
       </div>
 
       {/* Results Table */}
       <div className="bg-white border border-monarch-border rounded-lg overflow-hidden">
-        {/* Column Headers */}
         <div className="bg-monarch-navy text-white" style={{ display: 'grid', gridTemplateColumns: colTemplate }}>
           <div className="px-4 py-2"></div>
           {results.map((_, i) => (
@@ -49,7 +71,6 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
           ))}
         </div>
 
-        {/* Scenario Details */}
         <Section label="SCENARIO DETAILS" count={count} />
         <Row label="Property Address" count={count}>{results.map((r, i) => <Val key={i} v={r.propertyAddress} fmt="text" />)}</Row>
         <Row label="Loan Program" count={count}>{results.map((r, i) => <Val key={i} v={r.loanProgram} fmt="text" />)}</Row>
@@ -59,7 +80,6 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
         <Row label="Down Payment / LTV" count={count}>{results.map((r, i) => <Val key={i} v={r.downPaymentOrLtv} fmt="text" />)}</Row>
         <Row label="Transaction Type" count={count}>{results.map((r, i) => <Val key={i} v={r.transactionType} fmt="text" />)}</Row>
 
-        {/* Loan Details */}
         <Section label="LOAN DETAILS" count={count} />
         <Row label="Purchase Price / Current Value" count={count}>{results.map((r, i) => <Val key={i} v={r.priceOrValue} />)}</Row>
         <Row label="Down Payment / Payoff" count={count}>{results.map((r, i) => <Val key={i} v={r.downPaymentOrPayoff} />)}</Row>
@@ -72,7 +92,6 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
           <Row label="Loan w/ UFMIP" count={count}>{results.map((r, i) => <Val key={i} v={r.isConventional ? r.loanWithUfmip : 0} />)}</Row>
         )}
 
-        {/* Payment Breakdown */}
         <Section label="PAYMENT BREAKDOWN" count={count} />
         <Row label="Best Rate" count={count}>{results.map((r, i) => <span key={i} className="text-sm">{displayRate(r.bestRate)}</span>)}</Row>
         <Row label="Payment Type" count={count}>{results.map((r, i) => <Val key={i} v={r.paymentType} fmt="text" />)}</Row>
@@ -86,9 +105,7 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
         <HighlightRow label="TOTAL Monthly Payment" count={count}>{results.map((r, i) => <StarVal key={i} v={r.totalMonthlyPayment} />)}</HighlightRow>
         <Row label="Gross Annual Revenue" count={count}>{results.map((r, i) => <Val key={i} v={r.grossAnnualRevenue} />)}</Row>
 
-        {/* Investment Analysis */}
         <Section label="INVESTMENT ANALYSIS" count={count} />
-        {/* Gold checkmark for Investment occupancy */}
         <div className="border-t border-monarch-border/50" style={{ display: 'grid', gridTemplateColumns: colTemplate }}>
           <div className="px-4 py-2"></div>
           {results.map((r, i) => (
@@ -107,22 +124,16 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
         <HighlightRow label="Monthly Net Cash Flow" count={count}>{results.map((r, i) => <StarVal key={i} v={r.monthlyNetCashFlow} negative />)}</HighlightRow>
         <Row label="Potential Annual Income" count={count}>{results.map((r, i) => <Val key={i} v={r.potentialAnnualIncome} />)}</Row>
 
-        {/* Closing Cost Breakdown */}
         <Section label="CLOSING COST BREAKDOWN" count={count} />
         <Row label="Partner for Life Eligible?" count={count}>{results.map((r, i) => <Val key={i} v={r.partnerForLife} fmt="text" />)}</Row>
         <Row label="TQL Flat Fee (Origination)" count={count}>{results.map((r, i) => <Val key={i} v={r.tqlFlatFee} />)}</Row>
         <Row label="TQL Processing / UW Fee" count={count}>{results.map((r, i) => <Val key={i} v={r.tqlProcessingFee} />)}</Row>
         <Row label="TQL Lower Rate Discount" count={count}>{results.map((r, i) => <Val key={i} v={r.tqlLowerRateDiscount} />)}</Row>
-        <Row label="3rd Party Closing Costs" count={count}>{results.map((r, i) => <Val key={i} v={r.thirdPartyClosingCosts} />)}</Row>
-        <Row label="3rd Party Certifications" count={count}>{results.map((r, i) => <Val key={i} v={r.thirdPartyCertifications} />)}</Row>
-        <Row label="Title Fees" count={count}>{results.map((r, i) => <Val key={i} v={r.titleFees} />)}</Row>
-        <Row label="Pre-Paids (Int, Tax, Ins)" count={count}>{results.map((r, i) => <Val key={i} v={r.prepaids} />)}</Row>
-        <Row label="Escrow Payment at Closing" count={count}>{results.map((r, i) => <Val key={i} v={r.escrowAtClosing} />)}</Row>
+        <Row label="Taxes/Ins. Escrow Setup" count={count}>{results.map((r, i) => <Val key={i} v={r.taxInsEscrowSetup} />)}</Row>
         <Row label="Seller Credit" count={count}>{results.map((r, i) => <Val key={i} v={r.sellerCredit} />)}</Row>
         <HighlightRow label="Estimated Cash to Close" count={count}>{results.map((r, i) => <StarVal key={i} v={r.estimatedCashToClose} />)}</HighlightRow>
         <HighlightRow label="PITIA Reserves Required" count={count}>{results.map((r, i) => <StarVal key={i} v={r.pitiaReserves} />)}</HighlightRow>
 
-        {/* Fees Paid Before Closing */}
         <Section label="FEES PAID BEFORE CLOSING" count={count} />
         <Row label="Appraisal (3rd Party)" count={count}>{results.map((_, i) => <span key={i} className="text-sm text-monarch-muted">~$600-900</span>)}</Row>
         <Row label="Application & Credit Report Fee" count={count}>{results.map((_, i) => <span key={i} className="text-sm text-green-600 font-medium">$0 (Waived)</span>)}</Row>
@@ -136,32 +147,17 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
         <div className="flex items-center gap-3 mt-3 text-xs text-monarch-muted">
           <div className="flex items-center gap-1.5">
             <span>Prepared by</span>
-            <input
-              value={loanOfficer.name}
-              onChange={e => onLoanOfficerChange('name', e.target.value)}
-              placeholder="Loan Officer Name"
-              className="border-b border-monarch-border bg-transparent px-1 py-0.5 text-xs text-monarch-navy w-44 focus:border-monarch-gold focus:outline-none"
-            />
+            <input value={loanOfficer.name} onChange={e => onLoanOfficerChange('name', e.target.value)} placeholder="Loan Officer Name" className="border-b border-monarch-border bg-transparent px-1 py-0.5 text-xs text-monarch-navy w-44 focus:border-monarch-gold focus:outline-none" />
           </div>
           <span>|</span>
           <div className="flex items-center gap-1.5">
             <span>Date:</span>
-            <input
-              type="date"
-              value={loanOfficer.date}
-              onChange={e => onLoanOfficerChange('date', e.target.value)}
-              className="border-b border-monarch-border bg-transparent px-1 py-0.5 text-xs text-monarch-navy focus:border-monarch-gold focus:outline-none"
-            />
+            <input type="date" value={loanOfficer.date} onChange={e => onLoanOfficerChange('date', e.target.value)} className="border-b border-monarch-border bg-transparent px-1 py-0.5 text-xs text-monarch-navy focus:border-monarch-gold focus:outline-none" />
           </div>
           <span>|</span>
           <div className="flex items-center gap-1.5">
             <span>NMLS#</span>
-            <input
-              value={loanOfficer.nmlsNumber}
-              onChange={e => onLoanOfficerChange('nmlsNumber', e.target.value)}
-              placeholder="000000"
-              className="border-b border-monarch-border bg-transparent px-1 py-0.5 text-xs text-monarch-navy w-24 focus:border-monarch-gold focus:outline-none"
-            />
+            <input value={loanOfficer.nmlsNumber} onChange={e => onLoanOfficerChange('nmlsNumber', e.target.value)} placeholder="000000" className="border-b border-monarch-border bg-transparent px-1 py-0.5 text-xs text-monarch-navy w-24 focus:border-monarch-gold focus:outline-none" />
           </div>
         </div>
       </div>

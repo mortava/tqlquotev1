@@ -75,9 +75,12 @@ function App() {
       <nav className="bg-monarch-navy text-white no-print sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <img src="/tql-logo.png" alt="Total Quality Lending" className="h-8" />
-              <span className="text-white/60 text-[10px] font-semibold tracking-widest uppercase">Quote Lab</span>
+              <div className="leading-none">
+                <span className="text-white font-bold text-sm tracking-tight">CLEAR QUOTE</span>
+                <br/><span className="text-white/50 text-[9px] italic">Clarity in the Costs&trade;</span>
+              </div>
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -98,7 +101,7 @@ function App() {
                     : 'text-white/60 hover:text-white hover:bg-white/5'
                 }`}
               >
-                Quote Lab
+                Clear Quote
               </button>
               <button
                 onClick={() => setView('rentcast')}

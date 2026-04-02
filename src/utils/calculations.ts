@@ -97,21 +97,22 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
   const lowerRateDecimal = pct(s.tqlLowerRateOption);
   const tqlLowerRateDiscount = baseLoanAmount * lowerRateDecimal;
 
-  const isConvFhaVa = s.loanProgram.startsWith('Conv') || s.loanProgram.startsWith('FHA') || s.loanProgram.startsWith('VA');
-  const thirdPartyCertifications = s.loanProgram === '' ? 0 : isConvFhaVa ? 350 : 695;
+  // Taxes/Insurance Escrow Setup = 2 months of taxes + 2 months insurance
+  const taxInsEscrowSetup = (taxesMonthly * 2) + (insuranceMonthly * 2);
 
-  const titleFees = num(s.escrowTitleFee);
-  const prepaids = num(s.insuranceAnnual) + (taxesMonthly * 4) + (baseLoanAmount * rate / 365 * 5);
-  const escrowAtClosing = (insuranceMonthly * 3) + (taxesMonthly * 4);
   const sellerCreditDecimal = pct(s.sellerCreditPct);
   const sellerCredit = priceOrValue === 0 ? 0 : priceOrValue * sellerCreditDecimal * -1;
+
+  // Atlas title fees if loaded
+  const atlas = s.atlasTitleResult;
+  const atlasTotalFees = atlas?.loaded ? atlas.total : 0;
 
   let estimatedCashToClose = 0;
   if (priceOrValue > 0) {
     if (isPurchase) {
-      estimatedCashToClose = downPaymentOrPayoff + tqlFlatFee + tqlProcessingFee + tqlLowerRateDiscount + 0 + thirdPartyCertifications + titleFees + prepaids + escrowAtClosing + sellerCredit;
+      estimatedCashToClose = downPaymentOrPayoff + tqlFlatFee + tqlProcessingFee + tqlLowerRateDiscount + taxInsEscrowSetup + atlasTotalFees + sellerCredit;
     } else {
-      estimatedCashToClose = baseLoanAmount - thirdPartyCertifications - titleFees - prepaids - escrowAtClosing - sellerCredit - num(s.currentLoanPayoff) - tqlProcessingFee - tqlFlatFee;
+      estimatedCashToClose = baseLoanAmount - taxInsEscrowSetup - atlasTotalFees - sellerCredit - num(s.currentLoanPayoff) - tqlProcessingFee - tqlFlatFee;
     }
   }
 
@@ -150,11 +151,7 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
     tqlFlatFee,
     tqlProcessingFee,
     tqlLowerRateDiscount,
-    thirdPartyClosingCosts: 0,
-    thirdPartyCertifications,
-    titleFees,
-    prepaids,
-    escrowAtClosing,
+    taxInsEscrowSetup,
     sellerCredit,
     estimatedCashToClose,
     pitiaReserves,

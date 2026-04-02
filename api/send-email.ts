@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const result = await resend.emails.send({
-      from: from || 'TQL Quote Lab <onboarding@resend.dev>',
+      from: from || 'TQL Advisor <onboarding@resend.dev>',
       to: Array.isArray(to) ? to : [to],
       subject,
       html,

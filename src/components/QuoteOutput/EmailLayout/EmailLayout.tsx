@@ -13,7 +13,7 @@ const LOGO_URL = `${window.location.origin}/tql-logo.png`;
 
 export default function EmailLayout({ result, preparedFor, loanOfficer, scenarioIndex }: Props) {
   const [copied, setCopied] = useState(false);
-  const [subject, setSubject] = useState(`TQL Payment Estimate — ${preparedFor.name || 'Client'}`);
+  const [subject, setSubject] = useState(`Quote Results for: ${preparedFor.name?.split(' ')[0] || 'Client'}, from ${loanOfficer.name?.split(' ')[0] || 'TQL'}`);
   const [personalMessage, setPersonalMessage] = useState(
     `Thank you for taking the time to speak with me this afternoon, I have included the information that we spoke about below. Please let me know if you have any questions.\n\nThank you,\n${loanOfficer.name || 'Your Loan Officer'}`
   );
@@ -44,11 +44,19 @@ export default function EmailLayout({ result, preparedFor, loanOfficer, scenario
 
     return `
 <table cellpadding="0" cellspacing="0" border="0" width="560" style="font-family:'Segoe UI',Arial,Helvetica,sans-serif;max-width:560px;border:1px solid ${border};border-radius:8px;overflow:hidden">
-  <!-- HEADER with logo -->
-  <tr><td style="background:${navy};padding:14px 20px">
+  <!-- HEADER: Logo + CLEAR QUOTE + Prepared For -->
+  <tr><td style="background:#fff;padding:16px 20px;border-bottom:3px solid ${navy}">
     <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
-      <td><img src="${LOGO_URL}" alt="Total Quality Lending" width="140" style="display:block" /></td>
-      <td style="text-align:right;vertical-align:middle"><span style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:1px">QUOTE LAB</span></td>
+      <td style="vertical-align:middle"><img src="${LOGO_URL}" alt="Total Quality Lending" width="120" style="display:block" /></td>
+      <td style="vertical-align:middle;padding-left:14px">
+        <span style="font-size:20px;font-weight:800;color:${navy};letter-spacing:-0.5px">CLEAR QUOTE</span><br/>
+        <span style="font-size:11px;color:${muted};font-style:italic">Clarity in the Costs&trade;</span>
+      </td>
+      <td style="text-align:right;vertical-align:top">
+        <span style="font-size:10px;font-weight:700;color:${navy};text-transform:uppercase;letter-spacing:1px">Prepared For</span><br/>
+        <span style="font-size:13px;font-weight:600;color:${navy}">${preparedFor.name || ''}</span><br/>
+        <span style="font-size:11px;color:${muted}">${preparedFor.email || ''}</span>
+      </td>
     </tr></table>
   </td></tr>
 

@@ -43,6 +43,7 @@ export interface ScenarioInput {
   tqlLowerRateOption: number | '';
   pitiaReserveMonths: number | '';
   docsReceived: string[];
+  atlasTitleResult: AtlasTitleResult | null;
 }
 
 export interface QuoteResult {
@@ -81,14 +82,21 @@ export interface QuoteResult {
   tqlFlatFee: number;
   tqlProcessingFee: number;
   tqlLowerRateDiscount: number;
-  thirdPartyClosingCosts: number;
-  thirdPartyCertifications: number;
-  titleFees: number;
-  prepaids: number;
-  escrowAtClosing: number;
+  taxInsEscrowSetup: number;
   sellerCredit: number;
   estimatedCashToClose: number;
   pitiaReserves: number;
+}
+
+export interface AtlasTitleResult {
+  total: number;
+  lendersTitlePolicy: number;
+  closingEscrowFeeWithCplSearch: number;
+  stateLocalRecording: number;
+  recordingFeeBreakdown: string;
+  closingFeeBreakdown: string;
+  loaded: boolean;
+  error?: string;
 }
 
 export type ActiveView = 'inputs' | 'quote' | 'rentcast';
@@ -201,5 +209,6 @@ export function emptyScenario(): ScenarioInput {
     tqlLowerRateOption: '',
     pitiaReserveMonths: '',
     docsReceived: [],
+    atlasTitleResult: null,
   };
 }

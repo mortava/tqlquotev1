@@ -273,9 +273,6 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
         <InputRow label="Seller Credit (%)" count={count}>
           {scenarios.map((s, i) => <NumField key={i} value={s.sellerCreditPct} onChange={v => onScenarioChange(i, 'sellerCreditPct', v)} placeholder="e.g. 3" step="0.5" />)}
         </InputRow>
-        <InputRow label="Escrow / Title Fee Est." count={count}>
-          {scenarios.map((s, i) => <NumField key={i} value={s.escrowTitleFee} onChange={v => onScenarioChange(i, 'escrowTitleFee', v)} placeholder="$0" />)}
-        </InputRow>
         <InputRow label="TQL Compliance UW Fee" count={count}>
           {scenarios.map((s, i) => <NumField key={i} value={s.tqlComplianceFee} onChange={v => onScenarioChange(i, 'tqlComplianceFee', v === '' ? 1795 : v as number)} />)}
         </InputRow>
@@ -285,6 +282,106 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
         <InputRow label="PITIA Reserve Months" count={count}>
           {scenarios.map((s, i) => <NumField key={i} value={s.pitiaReserveMonths} onChange={v => onScenarioChange(i, 'pitiaReserveMonths', v)} placeholder="0" />)}
         </InputRow>
+      </div>
+
+      {/* Title/Escrow Closing Cost Est. */}
+      <div className="bg-white border border-monarch-border rounded-lg overflow-hidden">
+        <div className="bg-monarch-navy text-white px-4 py-2">
+          <span className="text-xs font-bold uppercase tracking-wider">Title/Escrow Closing Cost Est.</span>
+        </div>
+        <div className="p-4">
+          {scenarios.map((s, i) => {
+            const atlas = s.atlasTitleResult;
+            const fmt = (n: number) => n ? `$${n.toLocaleString()}` : '—';
+            return (
+              <div key={i} className={`${i > 0 ? 'mt-4 pt-4 border-t border-monarch-border' : ''}`}>
+                {count > 1 && <p className="text-xs font-semibold text-monarch-navy mb-2">Scenario {i + 1}</p>}
+                <div className="grid grid-cols-4 gap-3 mb-3">
+                  <div className="text-center">
+                    <div className="bg-monarch-section rounded-lg p-3 min-h-[48px] flex items-center justify-center">
+                      <span className="text-sm font-semibold text-monarch-navy">{atlas?.loaded ? fmt(atlas.total) : ''}</span>
+                    </div>
+                    <p className="text-[10px] text-monarch-muted uppercase tracking-wider mt-1">Total Cost</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-monarch-section rounded-lg p-3 min-h-[48px] flex items-center justify-center">
+                      <span className="text-sm font-semibold text-monarch-navy">{atlas?.loaded ? fmt(atlas.lendersTitlePolicy) : ''}</span>
+                    </div>
+                    <p className="text-[10px] text-monarch-muted uppercase tracking-wider mt-1">Lender Title Policy</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-monarch-section rounded-lg p-3 min-h-[48px] flex items-center justify-center">
+                      <span className="text-sm font-semibold text-monarch-navy">{atlas?.loaded ? fmt(atlas.closingEscrowFeeWithCplSearch) : ''}</span>
+                    </div>
+                    <p className="text-[10px] text-monarch-muted uppercase tracking-wider mt-1">Title Company Fee</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-monarch-section rounded-lg p-3 min-h-[48px] flex items-center justify-center">
+                      <span className="text-sm font-semibold text-monarch-navy">{atlas?.loaded ? fmt(atlas.stateLocalRecording) : ''}</span>
+                    </div>
+                    <p className="text-[10px] text-monarch-muted uppercase tracking-wider mt-1">State/Local Recording</p>
+                  </div>
+                </div>
+                {atlas?.loaded && atlas.closingFeeBreakdown && (
+                  <p className="text-[10px] text-monarch-muted mb-2">{atlas.closingFeeBreakdown}</p>
+                )}
+                {atlas?.loaded && atlas.recordingFeeBreakdown && (
+                  <p className="text-[10px] text-monarch-muted mb-2">{atlas.recordingFeeBreakdown}</p>
+                )}
+                {atlas?.error && <p className="text-xs text-red-500 mb-2">{atlas.error}</p>}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const addr = s.propertyAddress;
+                      if (!addr.state) { onScenarioChange(i, 'atlasTitleResult', { loaded: false, error: 'Enter state first' } as never); return; }
+                      onScenarioChange(i, 'atlasTitleResult', { loaded: false, error: undefined } as never);
+                      try {
+                        const txType = s.transactionType === 'Purchase' ? 'purchase' : 'refinance';
+                        const loanAmt = s.transactionType === 'Purchase'
+                          ? Math.round((typeof s.purchasePrice === 'number' ? s.purchasePrice : 0) * (1 - (typeof s.downPaymentPct === 'number' ? s.downPaymentPct : 0) / 100))
+                          : Math.round((typeof s.currentPropertyValue === 'number' ? s.currentPropertyValue : 0) * (typeof s.ltvPct === 'number' ? s.ltvPct : 0) / 100);
+                        const salesPrice = s.transactionType === 'Purchase' ? (typeof s.purchasePrice === 'number' ? s.purchasePrice : 0) : 0;
+                        const params = new URLSearchParams({
+                          state: addr.state, county: addr.city || 'Default',
+                          loanAmount: String(loanAmt), transactionType: txType,
+                          salesPrice: String(salesPrice), city: addr.city || '', address: addr.street || '',
+                        });
+                        const res = await fetch(`/api/atlas-title?${params}`);
+                        const data = await res.json();
+                        if (res.ok && data.total > 0) {
+                          const closing = data.closingEscrowFeeWithCplSearch || (data.closingEscrowFee + 200);
+                          const recording = data.stateLocalRecording || (data.recordingFee + data.mortgageTax);
+                          onScenarioChange(i, 'atlasTitleResult', {
+                            total: data.total, lendersTitlePolicy: data.lendersTitlePolicy,
+                            closingEscrowFeeWithCplSearch: closing, stateLocalRecording: recording,
+                            recordingFeeBreakdown: `Recording: $${data.recordingFee || 0} + Mortgage Tax: $${data.mortgageTax || 0}`,
+                            closingFeeBreakdown: `Closing/Escrow: $${data.closingEscrowFee || 0} + CPL: $${data.cplFee || 50} + Search/Exam: $${data.searchExamFee || 150}`,
+                            loaded: true,
+                          });
+                        } else {
+                          onScenarioChange(i, 'atlasTitleResult', { loaded: false, error: data.error || 'No results', total: 0, lendersTitlePolicy: 0, closingEscrowFeeWithCplSearch: 0, stateLocalRecording: 0, recordingFeeBreakdown: '', closingFeeBreakdown: '' });
+                        }
+                      } catch {
+                        onScenarioChange(i, 'atlasTitleResult', { loaded: false, error: 'Network error', total: 0, lendersTitlePolicy: 0, closingEscrowFeeWithCplSearch: 0, stateLocalRecording: 0, recordingFeeBreakdown: '', closingFeeBreakdown: '' });
+                      }
+                    }}
+                    className="px-4 py-2 bg-monarch-navy text-white text-xs font-medium rounded-lg hover:bg-monarch-navy/90 transition-colors"
+                  >
+                    Get Atlas Title Fee Quote
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    className="px-4 py-2 border-2 border-monarch-navy/30 text-monarch-navy/30 text-xs font-medium rounded-lg cursor-not-allowed"
+                  >
+                    Get Fluid Fees
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Documents Received & Reviewed (for Pre-Approval) */}

@@ -14,18 +14,26 @@ const PrintLayout = forwardRef<HTMLDivElement, Props>(({ results, preparedFor, l
 
   return (
     <div ref={ref} className="bg-white p-8 max-w-[1100px] mx-auto text-[11px]" style={{ fontFamily: "'Inter', sans-serif" }}>
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4 border-b-2 border-[#0D3B66] pb-3">
-        <div>
-          <h1 className="text-xl font-bold text-[#0D3B66] tracking-tight">QUOTE BUILDER</h1>
-          <p className="text-[10px] text-gray-500 mt-0.5">Payment Estimator &nbsp;|&nbsp; For Informational Purposes Only</p>
+      {/* CLEAR QUOTE Header */}
+      <div className="flex items-start justify-between mb-2 pb-3 border-b-[3px] border-[#0D3B66]">
+        <div className="flex items-center gap-3">
+          <img src="/tql-logo.png" alt="Total Quality Lending" className="h-12" />
+          <div>
+            <h1 className="text-[22px] font-extrabold text-[#0D3B66] tracking-tight leading-tight">CLEAR QUOTE</h1>
+            <p className="text-[10px] text-gray-400 italic">Clarity in the Costs&trade;</p>
+          </div>
         </div>
         <div className="text-right">
           <p className="text-[10px] font-bold text-[#0D3B66] uppercase tracking-wider">Prepared For</p>
-          <p>{preparedFor.name || '—'}</p>
-          <p className="text-gray-500">{preparedFor.email}</p>
-          <p className="text-gray-500">{preparedFor.phone}</p>
+          <p className="text-[13px] font-semibold text-[#0D3B66]">{preparedFor.name || '—'}</p>
+          <p className="text-[10px] text-gray-500">{preparedFor.email}</p>
         </div>
+      </div>
+
+      {/* MLO Bar */}
+      <div className="bg-[#0D3B66] text-white rounded px-4 py-2 mb-4 flex items-center justify-between text-[10px]">
+        <span className="font-semibold">{loanOfficer.name || 'Loan Officer'} — {loanOfficer.title || 'Loan Officer & Advisor'}</span>
+        <span>{[loanOfficer.phone, loanOfficer.email, loanOfficer.nmlsNumber ? `NMLS# ${loanOfficer.nmlsNumber}` : ''].filter(Boolean).join(' | ')}</span>
       </div>
 
       <table className="w-full border-collapse text-[11px]">
@@ -70,6 +78,7 @@ const PrintLayout = forwardRef<HTMLDivElement, Props>(({ results, preparedFor, l
           <SectionRow label="CLOSING COSTS" />
           <DataRow label="TQL Flat Fee">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{d(r.tqlFlatFee)}</td>)}</DataRow>
           <DataRow label="TQL Processing / UW">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{d(r.tqlProcessingFee)}</td>)}</DataRow>
+          <DataRow label="Taxes/Ins. Escrow Setup">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{d(r.taxInsEscrowSetup)}</td>)}</DataRow>
           <StarRow label="Cash to Close">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center font-bold text-[#0D3B66]">{d(r.estimatedCashToClose)}</td>)}</StarRow>
           <StarRow label="PITIA Reserves">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center font-bold text-[#0D3B66]">{d(r.pitiaReserves)}</td>)}</StarRow>
 

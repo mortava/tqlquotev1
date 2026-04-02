@@ -96,11 +96,19 @@ export default function RentCastPage({ scenarios }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-monarch-navy tracking-tight">RENTCAST REPORT</h1>
-          <p className="text-sm text-monarch-muted mt-1">Property value & rental estimate — internal use only</p>
+      {/* Styled header pill */}
+      <div className="bg-monarch-section rounded-lg p-4">
+        <div className="inline-flex items-center gap-3 bg-monarch-navy text-white px-5 py-3 rounded-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <div>
+            <p className="text-base font-bold tracking-tight">RENTCAST REPORT</p>
+            <p className="text-[11px] text-white/70">3rd Party Value & rental estimate</p>
+          </div>
         </div>
+      </div>
+
+      <div className="flex items-start justify-between">
+        <div></div>
         <div className="flex items-center gap-3">
           {scenarios.length > 1 && (
             <select
