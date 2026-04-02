@@ -75,9 +75,9 @@ function App() {
       <nav className="bg-monarch-navy text-white no-print sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-1">
-              <span className="text-white font-bold text-lg tracking-tight">TQL</span>
-              <span className="text-white text-sm font-semibold tracking-wide">QUOTE LAB</span>
+            <div className="flex items-center gap-2">
+              <img src="/tql-logo.png" alt="Total Quality Lending" className="h-8" />
+              <span className="text-white/60 text-[10px] font-semibold tracking-widest uppercase">Quote Lab</span>
             </div>
             <div className="flex items-center gap-1">
               <button
@@ -204,6 +204,7 @@ function App() {
           <EmailLayout
             result={results[state.emailScenarioIndex]}
             preparedFor={state.preparedFor}
+            loanOfficer={state.loanOfficer}
             scenarioIndex={state.emailScenarioIndex}
           />
         )}

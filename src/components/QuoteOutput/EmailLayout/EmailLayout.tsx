@@ -1,15 +1,23 @@
 import { useState } from 'react';
-import type { QuoteResult, PreparedFor } from '../../../types';
+import type { QuoteResult, PreparedFor, LoanOfficerInfo } from '../../../types';
 import { displayOrBlank, displayRate } from '../../../utils/displayOrBlank';
 
 interface Props {
   result: QuoteResult;
   preparedFor: PreparedFor;
+  loanOfficer: LoanOfficerInfo;
   scenarioIndex: number;
 }
 
-export default function EmailLayout({ result, preparedFor, scenarioIndex }: Props) {
+const LOGO_URL = `${window.location.origin}/tql-logo.png`;
+
+export default function EmailLayout({ result, preparedFor, loanOfficer, scenarioIndex }: Props) {
   const [copied, setCopied] = useState(false);
+  const [subject, setSubject] = useState(`TQL Payment Estimate — ${preparedFor.name || 'Client'}`);
+  const [personalMessage, setPersonalMessage] = useState(
+    `Thank you for taking the time to speak with me this afternoon, I have included the information that we spoke about below. Please let me know if you have any questions.\n\nThank you,\n${loanOfficer.name || 'Your Loan Officer'}`
+  );
+
   const d = (v: number, fmt: 'currency' | 'percent' | 'ratio' = 'currency') => displayOrBlank(v, fmt);
 
   function buildHtml(): string {
@@ -29,24 +37,38 @@ export default function EmailLayout({ result, preparedFor, scenarioIndex }: Prop
       `<tr><td colspan="2" style="padding:14px 12px 6px;font-size:11px;font-weight:700;color:${navy};text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid ${border}">${label}</td></tr>`;
 
     const showMi = result.isConventional;
+    const msgHtml = personalMessage.replace(/\n/g, '<br/>');
+
+    const loLine = [loanOfficer.name, loanOfficer.phone, loanOfficer.email].filter(Boolean).join(' | ');
+    const nmlsLine = loanOfficer.nmlsNumber ? `NMLS# ${loanOfficer.nmlsNumber}` : '';
 
     return `
-<table cellpadding="0" cellspacing="0" border="0" width="520" style="font-family:'Segoe UI',Arial,Helvetica,sans-serif;max-width:520px;border:1px solid ${border};border-radius:8px;overflow:hidden">
-  <tr><td colspan="2" style="background:${navy};padding:16px 16px 12px">
-    <span style="color:${gold};font-size:18px;font-weight:700;letter-spacing:-0.5px">TQL</span>
-    <span style="color:rgba(255,255,255,0.8);font-size:13px;margin-left:6px">Payment Estimate</span>
+<table cellpadding="0" cellspacing="0" border="0" width="560" style="font-family:'Segoe UI',Arial,Helvetica,sans-serif;max-width:560px;border:1px solid ${border};border-radius:8px;overflow:hidden">
+  <!-- HEADER with logo -->
+  <tr><td style="background:${navy};padding:14px 20px">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+      <td><img src="${LOGO_URL}" alt="Total Quality Lending" width="140" style="display:block" /></td>
+      <td style="text-align:right;vertical-align:middle"><span style="color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:1px">QUOTE LAB</span></td>
+    </tr></table>
   </td></tr>
-  <tr><td colspan="2" style="background:${bg};padding:12px 16px">
+
+  <!-- Personal message -->
+  <tr><td style="padding:20px 20px 16px;background:#fff;font-size:13px;color:#333;line-height:1.6">
+    ${msgHtml}
+  </td></tr>
+
+  <!-- Prepared for bar -->
+  <tr><td style="background:${bg};padding:10px 20px">
     <table cellpadding="0" cellspacing="0" border="0" width="100%">
       <tr>
-        <td style="font-size:12px;color:${muted}">Prepared for</td>
+        <td style="font-size:11px;color:${muted};text-transform:uppercase;letter-spacing:0.5px">Prepared for</td>
         <td style="text-align:right;font-size:13px;font-weight:600;color:${navy}">${preparedFor.name || '—'}</td>
       </tr>
-      ${preparedFor.email ? `<tr><td></td><td style="text-align:right;font-size:12px;color:${muted}">${preparedFor.email}</td></tr>` : ''}
-      ${preparedFor.phone ? `<tr><td></td><td style="text-align:right;font-size:12px;color:${muted}">${preparedFor.phone}</td></tr>` : ''}
     </table>
   </td></tr>
-  <tr><td colspan="2" style="padding:0 16px 16px;background:#fff">
+
+  <!-- Quote body -->
+  <tr><td style="padding:0 20px 20px;background:#fff">
     <table cellpadding="0" cellspacing="0" border="0" width="100%">
       ${section('Property & Loan')}
       ${row('Property Address', result.propertyAddress || 'TBD')}
@@ -60,6 +82,7 @@ export default function EmailLayout({ result, preparedFor, scenarioIndex }: Prop
       ${section('Loan Amounts')}
       ${row('Price / Value', d(result.priceOrValue))}
       ${row('Base Loan Amount', d(result.baseLoanAmount))}
+      ${result.cashOutAmount > 0 ? row('Cash Out Amount', d(result.cashOutAmount)) : ''}
       ${showMi ? row('Loan w/ UFMIP', d(result.loanWithUfmip)) : ''}
 
       ${section('Monthly Payment')}
@@ -76,14 +99,28 @@ export default function EmailLayout({ result, preparedFor, scenarioIndex }: Prop
       ${row('Monthly Rents', d(result.monthlyRents))}
       ${row('DSCR Ratio', d(result.dscrRatio, 'ratio'))}
       ${row('Net Cash Flow / Month', d(result.monthlyNetCashFlow))}
+      ${row('Potential Annual Income', d(result.potentialAnnualIncome))}
 
       ${section('Cash to Close')}
       ${starRow('Estimated Cash to Close', d(result.estimatedCashToClose))}
       ${row('PITIA Reserves', d(result.pitiaReserves))}
     </table>
   </td></tr>
-  <tr><td colspan="2" style="padding:12px 16px;background:${bg};font-size:10px;color:${muted};line-height:1.5">
+
+  <!-- Disclaimer -->
+  <tr><td style="padding:12px 20px;background:${bg};font-size:10px;color:${muted};line-height:1.5">
     This estimate is for informational purposes only and does not constitute a loan commitment or pre-approval. Contact your loan officer for official pricing.
+  </td></tr>
+
+  <!-- Footer with logo + LO info -->
+  <tr><td style="background:${navy};padding:16px 20px">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+      <td><img src="${LOGO_URL}" alt="Total Quality Lending" width="100" style="display:block;opacity:0.8" /></td>
+      <td style="text-align:right;vertical-align:middle">
+        ${loLine ? `<span style="color:rgba(255,255,255,0.9);font-size:12px;font-weight:600">${loLine}</span><br/>` : ''}
+        ${nmlsLine ? `<span style="color:rgba(255,255,255,0.6);font-size:11px">${nmlsLine}</span>` : ''}
+      </td>
+    </tr></table>
   </td></tr>
 </table>`.trim();
   }
@@ -98,7 +135,6 @@ export default function EmailLayout({ result, preparedFor, scenarioIndex }: Prop
         }),
       ]);
     } catch {
-      // Fallback: write plain HTML
       await navigator.clipboard.writeText(html);
     }
     setCopied(true);
@@ -107,40 +143,55 @@ export default function EmailLayout({ result, preparedFor, scenarioIndex }: Prop
 
   return (
     <div className="space-y-4">
+      {/* Controls */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-monarch-navy">Outlook / Email Copy</h2>
-          <p className="text-xs text-monarch-muted">Scenario {scenarioIndex + 1} — Copies clean HTML that renders in Outlook, Gmail, and all email clients</p>
+          <h2 className="text-lg font-semibold text-monarch-navy">Email Quote</h2>
+          <p className="text-xs text-monarch-muted">Scenario {scenarioIndex + 1} — Clean HTML for Outlook, Gmail, all email clients</p>
         </div>
         <button
           onClick={handleCopy}
           className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${
-            copied
-              ? 'bg-green-600 text-white'
-              : 'bg-monarch-navy text-white hover:bg-monarch-navy/90'
+            copied ? 'bg-green-600 text-white' : 'bg-monarch-navy text-white hover:bg-monarch-navy/90'
           }`}
         >
           {copied ? (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              Copied!
-            </>
+            <><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Copied!</>
           ) : (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-              Copy for Email
-            </>
+            <><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy for Email</>
           )}
         </button>
       </div>
 
+      {/* Subject & Personal Message */}
+      <div className="bg-white border border-monarch-border rounded-lg p-4 space-y-3 max-w-[560px]">
+        <div>
+          <label className="text-xs font-semibold text-monarch-navy uppercase tracking-wider">Subject Line</label>
+          <input
+            value={subject}
+            onChange={e => setSubject(e.target.value)}
+            className="w-full mt-1 px-3 py-2 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold focus:border-monarch-gold outline-none"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-monarch-navy uppercase tracking-wider">Personal Message</label>
+          <textarea
+            value={personalMessage}
+            onChange={e => setPersonalMessage(e.target.value)}
+            rows={5}
+            className="w-full mt-1 px-3 py-2 text-sm border border-monarch-border rounded focus:ring-1 focus:ring-monarch-gold focus:border-monarch-gold outline-none resize-y"
+            style={{ fontFamily: "'Segoe UI', Arial, sans-serif" }}
+          />
+        </div>
+      </div>
+
       {/* Live preview */}
-      <div className="bg-white border border-monarch-border rounded-lg p-6 max-w-[560px]">
+      <div className="bg-white border border-monarch-border rounded-lg p-6 max-w-[600px]">
         <div dangerouslySetInnerHTML={{ __html: buildHtml() }} />
       </div>
 
       <p className="text-xs text-monarch-muted">
-        Paste directly into Outlook (Ctrl+V) or Gmail compose. The formatting will be preserved.
+        Paste directly into Outlook (Ctrl+V) or Gmail compose. Use "Send to Client" button in the nav to email directly.
       </p>
     </div>
   );
