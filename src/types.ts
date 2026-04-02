@@ -8,6 +8,7 @@ export interface PropertyAddress {
   street: string;
   unit: string;
   city: string;
+  county: string;
   state: string;
   zip: string;
 }
@@ -172,7 +173,7 @@ export function isConventionalProgram(program: string): boolean {
 }
 
 export function emptyAddress(): PropertyAddress {
-  return { street: '', unit: '', city: '', state: '', zip: '' };
+  return { street: '', unit: '', city: '', county: '', state: '', zip: '' };
 }
 
 export function formatAddress(addr: PropertyAddress): string {

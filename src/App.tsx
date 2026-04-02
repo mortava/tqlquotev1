@@ -10,7 +10,53 @@ import EmailLayout from './components/QuoteOutput/EmailLayout/EmailLayout';
 import RentCastPage from './components/RentCast/RentCastPage';
 import { sendQuoteToClient } from './utils/sendToClient';
 
+const ACCESS_CODE = 'TQLROCKS';
+
+function AccessGate({ onUnlock }: { onUnlock: () => void }) {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState(false);
+
+  const handleSubmit = () => {
+    if (code.toUpperCase().trim() === ACCESS_CODE) {
+      sessionStorage.setItem('cq_access', '1');
+      onUnlock();
+    } else {
+      setError(true);
+      setTimeout(() => setError(false), 2000);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-monarch-bg flex items-center justify-center">
+      <div className="bg-white rounded-2xl shadow-xl p-10 max-w-sm w-full text-center">
+        <img src="/clear-quote-logo.png" alt="Clear Quote" className="h-32 mx-auto mb-6" />
+        <p className="text-xs text-monarch-muted uppercase tracking-widest mb-6">Enter Access Code</p>
+        <input
+          type="text"
+          value={code}
+          onChange={e => setCode(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+          placeholder="Access Code"
+          className={`w-full px-4 py-3 text-center text-lg font-semibold tracking-widest border-2 rounded-lg outline-none transition-colors ${
+            error ? 'border-red-400 bg-red-50' : 'border-monarch-border focus:border-monarch-navy'
+          }`}
+          autoFocus
+        />
+        {error && <p className="text-xs text-red-500 mt-2">Invalid code. Try again.</p>}
+        <button
+          onClick={handleSubmit}
+          className="w-full mt-4 py-3 bg-monarch-navy text-white font-semibold rounded-lg hover:bg-monarch-navy/90 transition-colors"
+        >
+          Enter
+        </button>
+        <p className="text-[10px] text-monarch-muted mt-6">Powered by TQL</p>
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem('cq_access') === '1');
   const [state, setState] = useState<AppState>({
     activeView: 'inputs',
     outputLayout: 'screen',
@@ -65,6 +111,8 @@ function App() {
   }, []);
 
   const results: QuoteResult[] = state.scenarios.map(s => calculateQuote(s));
+
+  if (!unlocked) return <AccessGate onUnlock={() => setUnlocked(true)} />;
 
   const setView = (v: ActiveView) => setState(prev => ({ ...prev, activeView: v }));
   const setLayout = (v: OutputLayout) => setState(prev => ({ ...prev, outputLayout: v }));

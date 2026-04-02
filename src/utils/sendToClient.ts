@@ -103,6 +103,7 @@ export async function sendQuoteToClient(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         to: preparedFor.email,
+        cc: loanOfficer.email || undefined,
         subject: subject || `Quote Results for: ${preparedFor.name?.split(' ')[0] || 'Client'}, from ${loanOfficer.name?.split(' ')[0] || 'TQL'}`,
         html,
       }),

@@ -136,8 +136,13 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
         <InputRow label="Unit #" count={count}>
           {scenarios.map((s, i) => <TextField key={i} value={s.propertyAddress.unit} onChange={v => handleAddressChange(i, 'unit', v)} placeholder="Apt / Suite" />)}
         </InputRow>
-        <InputRow label="City" count={count}>
-          {scenarios.map((s, i) => <TextField key={i} value={s.propertyAddress.city} onChange={v => handleAddressChange(i, 'city', v)} placeholder="City" />)}
+        <InputRow label="City / County" count={count}>
+          {scenarios.map((s, i) => (
+            <div key={i} className="flex gap-1.5">
+              <TextField value={s.propertyAddress.city} onChange={v => handleAddressChange(i, 'city', v)} placeholder="City" />
+              <TextField value={s.propertyAddress.county} onChange={v => handleAddressChange(i, 'county', v)} placeholder="County" />
+            </div>
+          ))}
         </InputRow>
         <InputRow label="State" count={count}>
           {scenarios.map((s, i) => <SelectField key={i} label="State" value={s.propertyAddress.state} options={US_STATES} onChange={v => handleAddressChange(i, 'state', v)} />)}
@@ -334,7 +339,7 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
                     type="button"
                     onClick={async () => {
                       const addr = s.propertyAddress;
-                      if (!addr.state) { onScenarioChange(i, 'atlasTitleResult', { loaded: false, error: 'Enter state first' } as never); return; }
+                      if (!addr.state || !addr.county) { onScenarioChange(i, 'atlasTitleResult', { loaded: false, error: 'Enter state and county first' } as never); return; }
                       onScenarioChange(i, 'atlasTitleResult', { loaded: false, error: undefined } as never);
                       try {
                         const txType = s.transactionType === 'Purchase' ? 'purchase' : 'refinance';
@@ -343,7 +348,7 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
                           : Math.round((typeof s.currentPropertyValue === 'number' ? s.currentPropertyValue : 0) * (typeof s.ltvPct === 'number' ? s.ltvPct : 0) / 100);
                         const salesPrice = s.transactionType === 'Purchase' ? (typeof s.purchasePrice === 'number' ? s.purchasePrice : 0) : 0;
                         const params = new URLSearchParams({
-                          state: addr.state, county: addr.city || 'Default',
+                          state: addr.state, county: addr.county,
                           loanAmount: String(loanAmt), transactionType: txType,
                           salesPrice: String(salesPrice), city: addr.city || '', address: addr.street || '',
                         });

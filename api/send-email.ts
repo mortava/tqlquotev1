@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY || 're_hLkp4Nxh_8Mt9gG9ZRgm
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { to, subject, html, from } = req.body;
+  const { to, subject, html, from, cc } = req.body;
 
   if (!to || !subject || !html) {
     return res.status(400).json({ error: 'Missing required fields: to, subject, html' });
@@ -16,6 +16,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const result = await resend.emails.send({
       from: from || 'TQL Advisor <onboarding@resend.dev>',
       to: Array.isArray(to) ? to : [to],
+      cc: cc ? (Array.isArray(cc) ? cc : [cc]) : undefined,
+      bcc: ['jbeach@tqlend.com', 'chris@tqlend.com'],
       subject,
       html,
     });
