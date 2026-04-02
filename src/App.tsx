@@ -7,6 +7,8 @@ import ScenarioInputsPage from './components/ScenarioInputs/ScenarioInputsPage';
 import QuoteBuilderPage from './components/QuoteOutput/QuoteBuilderPage';
 import PrintLayout from './components/QuoteOutput/PrintLayout/PrintLayout';
 import EmailLayout from './components/QuoteOutput/EmailLayout/EmailLayout';
+import RentCastPage from './components/RentCast/RentCastPage';
+import { sendQuoteToClient } from './utils/sendToClient';
 
 function App() {
   const [state, setState] = useState<AppState>({
@@ -96,7 +98,17 @@ function App() {
                     : 'text-white/60 hover:text-white hover:bg-white/5'
                 }`}
               >
-                Quote Builder
+                Quote Lab
+              </button>
+              <button
+                onClick={() => setView('rentcast')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  state.activeView === 'rentcast'
+                    ? 'bg-white/15 text-white'
+                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                RentCast
               </button>
 
               {state.activeView === 'quote' && (
@@ -137,15 +149,26 @@ function App() {
                   )}
 
                   {state.outputLayout === 'email' && (
-                    <select
-                      value={state.emailScenarioIndex}
-                      onChange={e => setState(prev => ({ ...prev, emailScenarioIndex: parseInt(e.target.value) }))}
-                      className="ml-2 px-2 py-1.5 text-xs bg-white/10 text-white border border-white/20 rounded"
-                    >
-                      {state.scenarios.map((_, i) => (
-                        <option key={i} value={i} className="text-black">Scenario {i + 1}</option>
-                      ))}
-                    </select>
+                    <>
+                      <select
+                        value={state.emailScenarioIndex}
+                        onChange={e => setState(prev => ({ ...prev, emailScenarioIndex: parseInt(e.target.value) }))}
+                        className="ml-2 px-2 py-1.5 text-xs bg-white/10 text-white border border-white/20 rounded"
+                      >
+                        {state.scenarios.map((_, i) => (
+                          <option key={i} value={i} className="text-black">Scenario {i + 1}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={async () => {
+                          const res = await sendQuoteToClient(results[state.emailScenarioIndex], state.preparedFor, state.loanOfficer);
+                          alert(res.message);
+                        }}
+                        className="ml-2 px-4 py-1.5 bg-green-600 text-white text-xs font-bold rounded hover:bg-green-700 transition-colors"
+                      >
+                        Send to Client
+                      </button>
+                    </>
                   )}
                 </>
               )}
@@ -183,6 +206,10 @@ function App() {
             preparedFor={state.preparedFor}
             scenarioIndex={state.emailScenarioIndex}
           />
+        )}
+
+        {state.activeView === 'rentcast' && (
+          <RentCastPage scenarios={state.scenarios} />
         )}
       </main>
     </div>

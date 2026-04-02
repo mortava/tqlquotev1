@@ -90,7 +90,7 @@ export interface QuoteResult {
   pitiaReserves: number;
 }
 
-export type ActiveView = 'inputs' | 'quote';
+export type ActiveView = 'inputs' | 'quote' | 'rentcast';
 export type OutputLayout = 'screen' | 'print' | 'email';
 
 export interface LoanOfficerInfo {
