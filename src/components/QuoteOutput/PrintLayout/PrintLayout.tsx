@@ -47,6 +47,7 @@ const PrintLayout = forwardRef<HTMLDivElement, Props>(({ results, preparedFor, l
           <SectionRow label="LOAN DETAILS" />
           <DataRow label="Purchase Price / Value">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{d(r.priceOrValue)}</td>)}</DataRow>
           <DataRow label="Base Loan Amount">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{d(r.baseLoanAmount)}</td>)}</DataRow>
+          {results.some(r => r.cashOutAmount > 0) && <DataRow label="Cash Out Amount">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{r.cashOutAmount > 0 ? d(r.cashOutAmount) : ''}</td>)}</DataRow>}
           <DataRow label="LTV">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{d(r.ltv, 'percent')}</td>)}</DataRow>
           {anyConv && <DataRow label="Loan w/ UFMIP">{results.map((r, i) => <td key={i} className="px-2 py-1 text-center">{r.isConventional ? d(r.loanWithUfmip) : ''}</td>)}</DataRow>}
 

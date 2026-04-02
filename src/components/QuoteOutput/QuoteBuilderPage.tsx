@@ -64,6 +64,9 @@ export default function QuoteBuilderPage({ results, preparedFor, loanOfficer, on
         <Row label="Purchase Price / Current Value" count={count}>{results.map((r, i) => <Val key={i} v={r.priceOrValue} />)}</Row>
         <Row label="Down Payment / Payoff" count={count}>{results.map((r, i) => <Val key={i} v={r.downPaymentOrPayoff} />)}</Row>
         <Row label="Base Loan Amount" count={count}>{results.map((r, i) => <Val key={i} v={r.baseLoanAmount} />)}</Row>
+        {results.some(r => r.cashOutAmount > 0) && (
+          <Row label="Cash Out Amount" count={count}>{results.map((r, i) => <Val key={i} v={r.cashOutAmount} />)}</Row>
+        )}
         <Row label="Loan-to-Value (LTV)" count={count}>{results.map((r, i) => <Val key={i} v={r.ltv} fmt="percent" />)}</Row>
         {anyConventional && (
           <Row label="Loan w/ UFMIP" count={count}>{results.map((r, i) => <Val key={i} v={r.isConventional ? r.loanWithUfmip : 0} />)}</Row>

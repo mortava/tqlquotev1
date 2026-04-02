@@ -60,6 +60,7 @@ export interface QuoteResult {
   baseLoanAmount: number;
   ltv: number;
   loanWithUfmip: number;
+  cashOutAmount: number;
   // Payment
   bestRate: number;
   paymentType: string;

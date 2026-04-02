@@ -132,6 +132,7 @@ export function calculateQuote(s: ScenarioInput): QuoteResult {
     baseLoanAmount,
     ltv,
     loanWithUfmip,
+    cashOutAmount: num(s.cashOutAmount),
     bestRate: rate,
     paymentType,
     principalAndInterest,
