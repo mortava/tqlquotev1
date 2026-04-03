@@ -207,6 +207,12 @@ export const TAX_DATA: TaxDatabase = {
  * Returns the rate as a human-readable percentage (e.g., 0.75 for 0.75%).
  * The form stores percentages in human format, calculations divide by 100.
  */
+export function getStatesWithNames(): { code: string; name: string }[] {
+  return Object.entries(TAX_DATA.states)
+    .map(([code, data]) => ({ code, name: data.name }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function lookupTaxRate(stateCode: string): { rate: number; stateName: string } | null {
   const code = stateCode.toUpperCase().trim();
   const stateData = TAX_DATA.states[code];

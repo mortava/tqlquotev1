@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ScenarioInput, PreparedFor, PropertyAddress, LoanOfficerInfo } from '../../types';
-import { LOAN_PROGRAMS, PROPERTY_TYPES, OCCUPANCY_TYPES, CREDIT_SCORE_RANGES, INCOME_DOC_TYPES, PPP_OPTIONS, US_STATES, DOCS_RECEIVED_OPTIONS, isConventionalProgram } from '../../types';
-import { lookupTaxRate } from '../../utils/propertyTaxData';
+import { LOAN_PROGRAMS, PROPERTY_TYPES, OCCUPANCY_TYPES, CREDIT_SCORE_RANGES, INCOME_DOC_TYPES, PPP_OPTIONS, DOCS_RECEIVED_OPTIONS, isConventionalProgram } from '../../types';
+import { lookupTaxRate, getStatesWithNames, getCountiesForState } from '../../utils/propertyTaxData';
 import { generatePreApproval } from '../../utils/generatePreApproval';
 
 interface Props {
@@ -136,16 +136,46 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
         <InputRow label="Unit #" count={count}>
           {scenarios.map((s, i) => <TextField key={i} value={s.propertyAddress.unit} onChange={v => handleAddressChange(i, 'unit', v)} placeholder="Apt / Suite" />)}
         </InputRow>
-        <InputRow label="City / County" count={count}>
-          {scenarios.map((s, i) => (
-            <div key={i} className="flex gap-1.5">
-              <TextField value={s.propertyAddress.city} onChange={v => handleAddressChange(i, 'city', v)} placeholder="City" />
-              <TextField value={s.propertyAddress.county} onChange={v => handleAddressChange(i, 'county', v)} placeholder="County" />
-            </div>
-          ))}
+        <InputRow label="City" count={count}>
+          {scenarios.map((s, i) => <TextField key={i} value={s.propertyAddress.city} onChange={v => handleAddressChange(i, 'city', v)} placeholder="City" />)}
         </InputRow>
         <InputRow label="State" count={count}>
-          {scenarios.map((s, i) => <SelectField key={i} label="State" value={s.propertyAddress.state} options={US_STATES} onChange={v => handleAddressChange(i, 'state', v)} />)}
+          {scenarios.map((s, i) => (
+            <select
+              key={i}
+              value={s.propertyAddress.state}
+              onChange={e => {
+                handleAddressChange(i, 'state', e.target.value);
+                handleAddressChange(i, 'county', '');
+              }}
+              className="w-full px-2.5 py-1.5 text-xs border border-monarch-border rounded bg-white focus:border-monarch-navy focus:ring-1 focus:ring-monarch-navy/20 outline-none"
+            >
+              <option value="">Select State</option>
+              {getStatesWithNames().map(st => (
+                <option key={st.code} value={st.code}>{st.name} ({st.code})</option>
+              ))}
+            </select>
+          ))}
+        </InputRow>
+        <InputRow label="County" count={count}>
+          {scenarios.map((s, i) => {
+            const counties = s.propertyAddress.state ? getCountiesForState(s.propertyAddress.state) : [];
+            return counties.length > 0 ? (
+              <select
+                key={i}
+                value={s.propertyAddress.county}
+                onChange={e => handleAddressChange(i, 'county', e.target.value)}
+                className="w-full px-2.5 py-1.5 text-xs border border-monarch-border rounded bg-white focus:border-monarch-navy focus:ring-1 focus:ring-monarch-navy/20 outline-none"
+              >
+                <option value="">Select County</option>
+                {counties.map(c => (
+                  <option key={c.name} value={c.name}>{c.name}</option>
+                ))}
+              </select>
+            ) : (
+              <TextField key={i} value={s.propertyAddress.county} onChange={v => handleAddressChange(i, 'county', v)} placeholder={s.propertyAddress.state ? 'Enter county' : 'Select state first'} />
+            );
+          })}
         </InputRow>
         <InputRow label="Zip Code" count={count}>
           {scenarios.map((s, i) => <TextField key={i} value={s.propertyAddress.zip} onChange={v => handleAddressChange(i, 'zip', v)} placeholder="00000" />)}

@@ -120,14 +120,14 @@ function App() {
   return (
     <div className="min-h-screen bg-monarch-bg">
       {/* Top Nav */}
-      <nav className="bg-monarch-navy text-white no-print sticky top-0 z-50">
+      <nav className="bg-gray-200 text-monarch-navy no-print sticky top-0 z-50 border-b border-gray-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-3">
               <img src="/tql-logo.png" alt="Total Quality Lending" className="h-8" />
               <div className="leading-none">
-                <span className="text-white font-bold text-sm tracking-tight">CLEAR QUOTE</span>
-                <br/><span className="text-white/50 text-[9px] italic">Clarity in the Costs&trade;</span>
+                <span className="text-monarch-navy font-bold text-sm tracking-tight">CLEAR QUOTE</span>
+                <br/><span className="text-monarch-navy/50 text-[9px] italic">Clarity in the Costs&trade;</span>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -135,8 +135,8 @@ function App() {
                 onClick={() => setView('inputs')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   state.activeView === 'inputs'
-                    ? 'bg-white/15 text-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    ? 'bg-monarch-navy text-white'
+                    : 'text-monarch-navy/60 hover:text-monarch-navy hover:bg-black/5'
                 }`}
               >
                 Scenario Inputs
@@ -145,8 +145,8 @@ function App() {
                 onClick={() => setView('quote')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   state.activeView === 'quote'
-                    ? 'bg-white/15 text-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    ? 'bg-monarch-navy text-white'
+                    : 'text-monarch-navy/60 hover:text-monarch-navy hover:bg-black/5'
                 }`}
               >
                 Clear Quote
@@ -155,8 +155,8 @@ function App() {
                 onClick={() => setView('rentcast')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   state.activeView === 'rentcast'
-                    ? 'bg-white/15 text-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    ? 'bg-monarch-navy text-white'
+                    : 'text-monarch-navy/60 hover:text-monarch-navy hover:bg-black/5'
                 }`}
               >
                 RentCast
@@ -164,11 +164,11 @@ function App() {
 
               {state.activeView === 'quote' && (
                 <>
-                  <div className="w-px h-6 bg-white/20 mx-2" />
+                  <div className="w-px h-6 bg-monarch-navy/20 mx-2" />
                   <button
                     onClick={() => setLayout('screen')}
                     className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                      state.outputLayout === 'screen' ? 'bg-monarch-gold text-monarch-navy' : 'text-white/60 hover:text-white'
+                      state.outputLayout === 'screen' ? 'bg-monarch-gold text-monarch-navy' : 'text-monarch-navy/60 hover:text-monarch-navy'
                     }`}
                   >
                     Screen
@@ -176,7 +176,7 @@ function App() {
                   <button
                     onClick={() => setLayout('print')}
                     className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                      state.outputLayout === 'print' ? 'bg-monarch-gold text-monarch-navy' : 'text-white/60 hover:text-white'
+                      state.outputLayout === 'print' ? 'bg-monarch-gold text-monarch-navy' : 'text-monarch-navy/60 hover:text-monarch-navy'
                     }`}
                   >
                     Print PDF
@@ -184,7 +184,7 @@ function App() {
                   <button
                     onClick={() => setLayout('email')}
                     className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
-                      state.outputLayout === 'email' ? 'bg-monarch-gold text-monarch-navy' : 'text-white/60 hover:text-white'
+                      state.outputLayout === 'email' ? 'bg-monarch-gold text-monarch-navy' : 'text-monarch-navy/60 hover:text-monarch-navy'
                     }`}
                   >
                     Email
@@ -204,7 +204,7 @@ function App() {
                       <select
                         value={state.emailScenarioIndex}
                         onChange={e => setState(prev => ({ ...prev, emailScenarioIndex: parseInt(e.target.value) }))}
-                        className="ml-2 px-2 py-1.5 text-xs bg-white/10 text-white border border-white/20 rounded"
+                        className="ml-2 px-2 py-1.5 text-xs bg-white text-monarch-navy border border-gray-300 rounded"
                       >
                         {state.scenarios.map((_, i) => (
                           <option key={i} value={i} className="text-black">Scenario {i + 1}</option>
