@@ -145,8 +145,8 @@ export default function ScenarioInputsPage({ scenarios, preparedFor, loanOfficer
               key={i}
               value={s.propertyAddress.state}
               onChange={e => {
-                handleAddressChange(i, 'state', e.target.value);
-                handleAddressChange(i, 'county', '');
+                const addr = { ...scenarios[i].propertyAddress, state: e.target.value, county: '' };
+                onScenarioChange(i, 'propertyAddress', addr);
               }}
               className="w-full px-2.5 py-1.5 text-xs border border-monarch-border rounded bg-white focus:border-monarch-navy focus:ring-1 focus:ring-monarch-navy/20 outline-none"
             >
