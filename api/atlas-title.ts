@@ -63,16 +63,19 @@ function parseCountyOptions(html: string, targetCounty: string): string | null {
 
 /** Fetch county options for a state via Atlas AJAX */
 async function loadCountiesForState(stateId: string): Promise<string> {
-  const formData = new FormData();
-  formData.append('action', 'load_county');
-  formData.append('stateID', stateId);
+  const body = new URLSearchParams({
+    action: 'load_county',
+    stateID: stateId,
+  });
 
   const resp = await fetch('https://www.atlastitleco.com/wp-admin/admin-ajax.php', {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'X-Requested-With': 'XMLHttpRequest',
     },
-    body: formData,
+    body: body.toString(),
   });
 
   if (!resp.ok) throw new Error(`Failed to load counties: ${resp.status}`);
