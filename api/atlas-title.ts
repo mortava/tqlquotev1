@@ -261,7 +261,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!quoteResp.ok) {
-      return res.status(502).json({ error: `Atlas quote request failed: ${quoteResp.status}` });
+      return res.status(502).json({ error: `Atlas Title does not support this state/county combination. Try a different location.` });
     }
 
     const quoteHtml = await quoteResp.text();
