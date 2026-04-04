@@ -37,23 +37,46 @@ function extractNonce(html: string): string | null {
   return m ? m[1] : null;
 }
 
-/** Parse the <select id="rc-county"> to build a state→county map */
+/** Parse county options HTML from load_county AJAX response */
 function parseCountyOptions(html: string, targetCounty: string): string | null {
-  const selectMatch = html.match(/<select[^>]*id=["']rc-county["'][^>]*>([\s\S]*?)<\/select>/i);
-  if (!selectMatch) return null;
-
   const optionRegex = /<option[^>]*value=["'](\d+)["'][^>]*>(.*?)<\/option>/gi;
   let match: RegExpExecArray | null;
-  const normalTarget = targetCounty.trim().toLowerCase();
+  const normalTarget = targetCounty.trim().toLowerCase().replace(/[^a-z\s]/g, '');
 
-  while ((match = optionRegex.exec(selectMatch[1])) !== null) {
+  let bestMatch: string | null = null;
+
+  while ((match = optionRegex.exec(html)) !== null) {
     const value = match[1];
-    const label = match[2].trim().toLowerCase();
+    const label = match[2].trim().toLowerCase().replace(/[^a-z\s]/g, '');
     if (label === normalTarget || label.replace(/ county$/i, '') === normalTarget) {
       return value;
     }
+    // Fuzzy: "Miami Dade" matches "Miami-Dade", "miamidade" matches "miami dade"
+    const labelCompact = label.replace(/\s+/g, '');
+    const targetCompact = normalTarget.replace(/\s+/g, '');
+    if (labelCompact === targetCompact) {
+      bestMatch = value;
+    }
   }
-  return null;
+  return bestMatch;
+}
+
+/** Fetch county options for a state via Atlas AJAX */
+async function loadCountiesForState(stateId: string): Promise<string> {
+  const formData = new FormData();
+  formData.append('action', 'load_county');
+  formData.append('stateID', stateId);
+
+  const resp = await fetch('https://www.atlastitleco.com/wp-admin/admin-ajax.php', {
+    method: 'POST',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    },
+    body: formData,
+  });
+
+  if (!resp.ok) throw new Error(`Failed to load counties: ${resp.status}`);
+  return resp.text();
 }
 
 function parseCurrency(text: string): number {
@@ -177,13 +200,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const txType = transactionType === 'purchase' ? '1' : '0';
 
   try {
-    /* ── Step 1 & 2: Fetch the calculator page for nonce + county IDs ── */
-    const pageResp = await fetch('https://www.atlastitleco.com/rate-calculator/', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
-    });
+    /* ── Step 1: Fetch nonce + county list in parallel ──────────────── */
+    const [pageResp, countyHtml] = await Promise.all([
+      fetch('https://www.atlastitleco.com/rate-calculator/', {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      }),
+      loadCountiesForState(stateId),
+    ]);
 
     if (!pageResp.ok) {
       return res.status(502).json({ error: `Failed to load Atlas calculator page: ${pageResp.status}` });
@@ -195,8 +221,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(502).json({ error: 'Could not extract nonce from Atlas calculator' });
     }
 
-    /* ── Step 2b: Resolve county name → county ID ────────────────────── */
-    const countyId = parseCountyOptions(pageHtml, county);
+    /* ── Step 2: Resolve county name → county ID from AJAX response ── */
+    const countyId = parseCountyOptions(countyHtml, county);
     if (!countyId) {
       return res.status(400).json({
         error: `County "${county}" not found for state ${stateUpper}. Check spelling or try a different county.`,
